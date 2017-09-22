@@ -1,3 +1,7 @@
-This project is created from a GitLab [Project Template](https://docs.gitlab.com/ce/gitlab-basics/create-project.html)
+# Azrael
 
-Additions and changes to the project can be proposed [on the original project](https://gitlab.com/gitlab-org/project-templates/spring)
+Azrael is a collection of applications that can communicate with the blockchain using a web3j interface. 
+
+## Worker
+
+Worker is the the service that is built around batch jobs. Based on a set of rules, events on the blockchain can be translated to ActiveMQ events.
