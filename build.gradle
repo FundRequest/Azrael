@@ -1,0 +1,55 @@
+apply plugin: 'idea'
+apply plugin: 'java'
+apply plugin: "io.spring.dependency-management"
+
+buildscript {
+    repositories {
+        mavenLocal()
+        mavenCentral()
+        maven { url "http://repo.spring.io/release" }
+    }
+    dependencies {
+        classpath("org.springframework.boot:spring-boot-gradle-plugin:${theSpringBootVersion}")
+        classpath "io.spring.gradle:dependency-management-plugin:${theDependencyManagementPlugin}"
+    }
+}
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+    maven { url "http://repo.spring.io/release" }
+}
+
+
+subprojects {
+    apply plugin: "io.spring.dependency-management"
+    apply plugin: 'java'
+
+    sourceCompatibility = theSourceCompatibility
+    targetCompatibility = theSourceCompatibility
+
+    tasks.withType(JavaCompile) {
+        options.incremental = true
+    }
+
+    dependencyManagement {
+        imports {
+            mavenBom("org.springframework.boot:spring-boot-dependencies:${theSpringBootVersion}")
+        }
+    }
+
+    repositories {
+        mavenLocal()
+        mavenCentral()
+        maven { url "http://repo.spring.io/release" }
+    }
+}
+
+allprojects {
+    apply plugin: "java"
+    apply plugin: 'idea'
+
+    version = theVersion
+
+    group = theGroup
+}
