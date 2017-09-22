@@ -1,0 +1,7 @@
+io:
+  fundrequest:
+    azrael:
+      worker:
+        infura:
+          token:
+          endpoint: https://rinkeby.infura.io

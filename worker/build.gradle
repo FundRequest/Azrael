@@ -2,8 +2,11 @@ apply plugin: 'org.springframework.boot'
 
 dependencies {
     compile("org.springframework.boot:spring-boot-starter")
+    compile("org.springframework.boot:spring-boot-starter-web")
     compile("org.springframework.boot:spring-boot-starter-actuator")
     compile("org.springframework.boot:spring-boot-devtools")
+
+    compile group: 'org.web3j', name: 'core', version: '2.3.1'
 
     testCompile("org.springframework.boot:spring-boot-starter-test")
     testCompile 'org.assertj:assertj-core:3.8.0'
