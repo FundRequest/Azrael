@@ -2,6 +2,6 @@ io:
   fundrequest:
     azrael:
       worker:
-        infura:
+        endpoint:
           token:
-          endpoint: https://rinkeby.infura.io
+          url: https://rinkeby.de-swaef.eu

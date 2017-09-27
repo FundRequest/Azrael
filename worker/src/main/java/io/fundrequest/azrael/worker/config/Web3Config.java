@@ -10,7 +10,7 @@ import org.web3j.protocol.infura.InfuraHttpService;
 public class Web3Config {
 
     @Bean
-    Web3j provideWeb3J(@Value("${io.fundrequest.azrael.worker.infura.endpoint}") final String endpoint) {
+    Web3j provideWeb3J(@Value("${io.fundrequest.azrael.worker.endpoint.url}") final String endpoint) {
         return Web3j.build(new InfuraHttpService(endpoint));
     }
 }
