@@ -24,4 +24,4 @@ dist/
 nbdist/
 .nb-gradle/
 
-application-local.yml
+worker/src/main/resources/application-local.yml
