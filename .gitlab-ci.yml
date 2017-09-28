@@ -22,9 +22,8 @@ build:
     paths:
       - worker/build/libs/*.jar
       - worker/Dockerfile
-    expire_in: 1 week
   only:
-    - master
+    - tags
 
 test:
   stage: test
