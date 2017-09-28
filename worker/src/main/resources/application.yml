@@ -5,12 +5,5 @@ io:
         endpoint:
           token:
           url: https://rinkeby.de-swaef.eu
-spring:
-  rabbitmq:
-    host: logan.fundrequest.io
-    password: fsenZ69mtYrL
-    username: azrael
-    virtual-host: azrael
-    port: 5672
 
 
