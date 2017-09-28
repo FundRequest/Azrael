@@ -5,6 +5,7 @@ dependencies {
     compile("org.springframework.boot:spring-boot-starter-web")
     compile("org.springframework.boot:spring-boot-starter-actuator")
     compile("org.springframework.boot:spring-boot-devtools")
+    compile("org.springframework.boot:spring-boot-starter-amqp")
 
     compile group: 'org.web3j', name: 'core', version: '2.3.1'
 
