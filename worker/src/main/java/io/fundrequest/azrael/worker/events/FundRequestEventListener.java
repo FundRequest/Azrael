@@ -8,6 +8,7 @@ import org.springframework.stereotype.Component;
 import org.web3j.protocol.Web3j;
 import org.web3j.protocol.core.DefaultBlockParameterName;
 import org.web3j.protocol.core.methods.request.EthFilter;
+import org.web3j.protocol.core.methods.response.EthLog;
 import org.web3j.protocol.core.methods.response.Log;
 import rx.Observable;
 
@@ -17,7 +18,7 @@ import javax.annotation.PostConstruct;
 public class FundRequestEventListener {
 
     final EthFilter filter = new EthFilter(DefaultBlockParameterName.EARLIEST,
-            DefaultBlockParameterName.LATEST, "0xb6a0d43b4dd2024861578ae165ced97ec2d70a16");
+            DefaultBlockParameterName.LATEST, "0x87d697be055a01984af5b9c96129420b3fba951c");
 
     @Autowired
     private RabbitTemplate rabbitTemplate;
@@ -29,14 +30,14 @@ public class FundRequestEventListener {
     private ObjectMapper objectMapper;
 
     @PostConstruct
-    public void listenToNewEvents() {
-        web3j.ethGetLogs(filter).observable().subscribe((log) -> {
+    public void listenToEvents() {
+        events().subscribe((log) -> {
             if (log.getLogs() != null && !log.getLogs().isEmpty()) {
                 log.getLogs()
                         .forEach((logItem) -> {
                             try {
                                 final String logsAsString = objectMapper.writeValueAsString(logItem);
-                                rabbitTemplate.convertAndSend("azrael_rinkeby", logsAsString);
+                           //     rabbitTemplate.convertAndSend("azrael_rinkeby", logsAsString);
                                 System.out.println(logsAsString);
                             } catch (Exception ex) {
                                 System.out.println(ex);
@@ -45,10 +46,10 @@ public class FundRequestEventListener {
             }
         });
 
-        events().subscribe((log) -> {
+        live().subscribe((log) -> {
             try {
                 final String logsAsString = objectMapper.writeValueAsString(log);
-                rabbitTemplate.convertAndSend("azrael_rinkeby", logsAsString);
+             //   rabbitTemplate.convertAndSend("azrael_rinkeby", logsAsString);
                 System.out.println(logsAsString);
             } catch (Exception ex) {
                 System.out.println(ex);
@@ -56,7 +57,11 @@ public class FundRequestEventListener {
         });
     }
 
-    public Observable<Log> events() {
+    private Observable<EthLog> events() {
+        return web3j.ethGetLogs(filter).observable();
+    }
+
+    private Observable<Log> live() {
         return web3j.ethLogObservable(filter);
     }
 
