@@ -2,9 +2,22 @@ package io.fundrequest.azrael.worker.events;
 
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import io.fundrequest.azrael.worker.contracts.FundRequestContract;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import org.web3j.abi.EventEncoder;
+import org.web3j.abi.EventValues;
+import org.web3j.abi.FunctionReturnDecoder;
+import org.web3j.abi.TypeReference;
+import org.web3j.abi.datatypes.Address;
+import org.web3j.abi.datatypes.Event;
+import org.web3j.abi.datatypes.Type;
+import org.web3j.abi.datatypes.generated.Bytes20;
+import org.web3j.abi.datatypes.generated.Bytes32;
+import org.web3j.abi.datatypes.generated.Uint256;
+import org.web3j.crypto.Credentials;
+import org.web3j.crypto.ECKeyPair;
 import org.web3j.protocol.Web3j;
 import org.web3j.protocol.core.DefaultBlockParameterName;
 import org.web3j.protocol.core.methods.request.EthFilter;
@@ -13,21 +26,32 @@ import org.web3j.protocol.core.methods.response.Log;
 import rx.Observable;
 
 import javax.annotation.PostConstruct;
+import java.math.BigInteger;
+import java.util.Arrays;
+import java.util.List;
 
 @Component
 public class FundRequestEventListener {
 
-    final EthFilter filter = new EthFilter(DefaultBlockParameterName.EARLIEST,
-            DefaultBlockParameterName.LATEST, "0x87d697be055a01984af5b9c96129420b3fba951c");
+    public static final List<TypeReference<?>> arguments = Arrays.asList(
+            new TypeReference<Bytes20>() {
+            }, new TypeReference<Uint256>() {
+            }, new TypeReference<Bytes32>() {
+            }
+    );
 
-    @Autowired
-    private RabbitTemplate rabbitTemplate;
-
+    public static final Event FUNDED_EVENT = new Event("Funded",
+            Arrays.asList(new TypeReference<Address>() {
+            }),
+            Arrays.asList(new TypeReference<Uint256>() {
+            }, new TypeReference<Bytes32>() {
+            }));
     @Autowired
     private Web3j web3j;
-
     @Autowired
     private ObjectMapper objectMapper;
+    @Value("${io.fundrequest.contract.address}")
+    private String fundrequestContractAddress;
 
     @PostConstruct
     public void listenToEvents() {
@@ -37,8 +61,14 @@ public class FundRequestEventListener {
                         .forEach((logItem) -> {
                             try {
                                 final String logsAsString = objectMapper.writeValueAsString(logItem);
-                           //     rabbitTemplate.convertAndSend("azrael_rinkeby", logsAsString);
-                                System.out.println(logsAsString);
+                                //     rabbitTemplate.convertAndSend("azrael_rinkeby", logsAsString);
+                                TypeReference<Address> typeReference = new TypeReference<Address>() {
+                                };
+                                Type type = FunctionReturnDecoder.decodeIndexedValue(((EthLog.LogObject) logItem).getData(), typeReference);
+                                FunctionReturnDecoder.decode(((EthLog.LogObject) logItem).getData(), FUNDED_EVENT.getNonIndexedParameters());
+                                FundRequestContract contract = new FundRequestContract(fundrequestContractAddress, web3j, Credentials.create(ECKeyPair.create(BigInteger.ZERO)), BigInteger.TEN, BigInteger.ONE);
+                                EventValues eventParameters = contract.getEventParameters(FUNDED_EVENT, (Log) logItem.get());
+                                System.out.println("lol");
                             } catch (Exception ex) {
                                 System.out.println(ex);
                             }
@@ -49,7 +79,7 @@ public class FundRequestEventListener {
         live().subscribe((log) -> {
             try {
                 final String logsAsString = objectMapper.writeValueAsString(log);
-             //   rabbitTemplate.convertAndSend("azrael_rinkeby", logsAsString);
+                //   rabbitTemplate.convertAndSend("azrael_rinkeby", logsAsString);
                 System.out.println(logsAsString);
             } catch (Exception ex) {
                 System.out.println(ex);
@@ -57,12 +87,20 @@ public class FundRequestEventListener {
         });
     }
 
+    private EthFilter fundedEventFilter() {
+        EthFilter ethFilter = new EthFilter(DefaultBlockParameterName.EARLIEST,
+                DefaultBlockParameterName.LATEST, fundrequestContractAddress);
+        String encodedEventSignature = EventEncoder.encode(FUNDED_EVENT);
+        ethFilter.addSingleTopic(encodedEventSignature);
+        return ethFilter;
+    }
+
     private Observable<EthLog> events() {
-        return web3j.ethGetLogs(filter).observable();
+        return web3j.ethGetLogs(fundedEventFilter()).observable();
     }
 
     private Observable<Log> live() {
-        return web3j.ethLogObservable(filter);
+        return web3j.ethLogObservable(fundedEventFilter());
     }
 
     /*
