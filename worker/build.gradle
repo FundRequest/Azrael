@@ -7,6 +7,8 @@ dependencies {
     compile("org.springframework.boot:spring-boot-devtools")
     compile("org.springframework.boot:spring-boot-starter-amqp")
 
+    compileOnly 'org.projectlombok:lombok:1.16.18'
+
     compile group: 'org.web3j', name: 'core', version: '2.3.1'
 
     testCompile("org.springframework.boot:spring-boot-starter-test")
