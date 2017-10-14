@@ -3,6 +3,8 @@ package io.fundrequest.azrael.worker.events;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.fundrequest.azrael.worker.contracts.FundRequestContract;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -40,6 +42,8 @@ public class FundRequestEventListener {
             }
     );
 
+    private static final Logger logger = LoggerFactory.getLogger(FundRequestEventListener.class);
+
     public static final Event FUNDED_EVENT = new Event("Funded",
             Arrays.asList(new TypeReference<Address>() {
             }),
@@ -68,6 +72,10 @@ public class FundRequestEventListener {
                                 FunctionReturnDecoder.decode(((EthLog.LogObject) logItem).getData(), FUNDED_EVENT.getNonIndexedParameters());
                                 FundRequestContract contract = new FundRequestContract(fundrequestContractAddress, web3j, Credentials.create(ECKeyPair.create(BigInteger.ZERO)), BigInteger.TEN, BigInteger.ONE);
                                 EventValues eventParameters = contract.getEventParameters(FUNDED_EVENT, (Log) logItem.get());
+                                if (isValidEvent(eventParameters)) {
+                                    String request = getRequest(eventParameters);
+                                    logger.info("Funded: {}", request);
+                                }
                                 System.out.println("lol");
                             } catch (Exception ex) {
                                 System.out.println(ex);
@@ -85,6 +93,21 @@ public class FundRequestEventListener {
                 System.out.println(ex);
             }
         });
+    }
+
+    private String getRequest(EventValues eventParameters) {
+        return new String(((byte[]) eventParameters.getNonIndexedValues().get(1).getValue()))
+                                                .chars()
+                                                .filter(c -> c != 0)
+                                                .mapToObj(c -> (char) c)
+                                                .collect(StringBuilder::new,
+                                                        StringBuilder::appendCodePoint, StringBuilder::append)
+                                                .toString();
+    }
+
+    private boolean isValidEvent(EventValues eventParameters) {
+        return eventParameters.getNonIndexedValues().size() == 2
+                && eventParameters.getIndexedValues().size() == 1;
     }
 
     private EthFilter fundedEventFilter() {
