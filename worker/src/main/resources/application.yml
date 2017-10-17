@@ -6,7 +6,7 @@ io:
           token:
           url: https://rinkeby.de-swaef.eu
     contract:
-      address: '0x87d697be055a01984af5b9c96129420b3fba951c'
+      address: '0x5059fd73ec2baad940a9d0d60e05fb655b84780d'
 server:
   port: 8001
 
