@@ -16,6 +16,7 @@ import org.web3j.abi.EventValues;
 import org.web3j.abi.TypeReference;
 import org.web3j.abi.datatypes.Address;
 import org.web3j.abi.datatypes.Event;
+import org.web3j.abi.datatypes.Utf8String;
 import org.web3j.abi.datatypes.generated.Bytes32;
 import org.web3j.abi.datatypes.generated.Uint256;
 import org.web3j.crypto.Credentials;
@@ -46,6 +47,7 @@ public class FundRequestEventListener {
             }),
             Arrays.asList(new TypeReference<Uint256>() {
             }, new TypeReference<Bytes32>() {
+            }, new TypeReference<Utf8String>() {
             }));
 
 
@@ -89,7 +91,7 @@ public class FundRequestEventListener {
     }
 
     private boolean isValidEvent(EventValues eventParameters) {
-        return eventParameters.getNonIndexedValues().size() == 2
+        return eventParameters.getNonIndexedValues().size() == 3
                 && eventParameters.getIndexedValues().size() == 1;
     }
 
@@ -105,7 +107,8 @@ public class FundRequestEventListener {
                                 .mapToObj(c -> (char) c)
                                 .collect(StringBuilder::new,
                                         StringBuilder::appendCodePoint, StringBuilder::append)
-                                .toString()
+                                .toString(),
+                        eventValues.getNonIndexedValues().get(2).getValue().toString()
                 );
 
                 rabbitTemplate.convertAndSend("azrael_rinkeby", objectMapper.writeValueAsString(fundedEvent));

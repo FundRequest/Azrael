@@ -12,5 +12,6 @@ public class FundedEvent {
     private String from;
     private String amount;
     private String data;
+    private String user;
 
 }
