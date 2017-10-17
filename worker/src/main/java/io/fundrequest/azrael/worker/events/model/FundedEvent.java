@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class FundedEvent {
-
+    private String transactionHash;
     private String from;
     private String amount;
     private String data;

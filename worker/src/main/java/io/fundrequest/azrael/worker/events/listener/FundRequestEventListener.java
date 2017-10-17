@@ -70,9 +70,10 @@ public class FundRequestEventListener {
                 log.getLogs()
                         .forEach((logItem) -> {
                             try {
+                                String transactionHash = ((EthLog.LogObject) logItem).getTransactionHash();
                                 fundRequestContract.getEventParameters(FUNDED_EVENT, (Log) logItem.get())
                                         .filter(this::isValidEvent)
-                                        .ifPresent(sendToAzrael());
+                                        .ifPresent(sendToAzrael(transactionHash));
                             } catch (Exception ex) {
                                 logger.error("unable to get event parameters", ex);
                             }
@@ -83,7 +84,7 @@ public class FundRequestEventListener {
         live().subscribe((log) -> {
             try {
                 fundRequestContract.getEventParameters(FUNDED_EVENT, log)
-                        .ifPresent(sendToAzrael());
+                        .ifPresent(sendToAzrael(log.getTransactionHash()));
             } catch (Exception ex) {
                 logger.error("unable to get live event parameters", ex);
             }
@@ -95,10 +96,11 @@ public class FundRequestEventListener {
                 && eventParameters.getIndexedValues().size() == 1;
     }
 
-    private Consumer<EventValues> sendToAzrael() {
+    private Consumer<EventValues> sendToAzrael(String transactionHash) {
         return eventValues -> {
             try {
                 final FundedEvent fundedEvent = new FundedEvent(
+                        transactionHash,
                         eventValues.getIndexedValues().get(0).getValue().toString(),
                         eventValues.getNonIndexedValues().get(0).getValue().toString(),
                         new String(((byte[]) eventValues.getNonIndexedValues().get(1).getValue()))
