@@ -4,6 +4,7 @@ package io.fundrequest.azrael.worker.events.listener;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.fundrequest.azrael.worker.contracts.FundRequestContract;
 import io.fundrequest.azrael.worker.events.model.FundedEvent;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -32,6 +33,7 @@ import java.util.Arrays;
 import java.util.function.Consumer;
 
 @Component
+@Slf4j
 public class FundRequestEventListener {
 
     private static final Logger logger = LoggerFactory.getLogger(FundRequestEventListener.class);
@@ -67,9 +69,10 @@ public class FundRequestEventListener {
                         .forEach((logItem) -> {
                             try {
                                 fundRequestContract.getEventParameters(FUNDED_EVENT, (Log) logItem.get())
+                                        .filter(this::isValidEvent)
                                         .ifPresent(sendToAzrael());
                             } catch (Exception ex) {
-                                System.out.println(ex);
+                                logger.error("unable to get event parameters", ex);
                             }
                         });
             }
@@ -77,16 +80,17 @@ public class FundRequestEventListener {
 
         live().subscribe((log) -> {
             try {
-                try {
-                    fundRequestContract.getEventParameters(FUNDED_EVENT, log)
-                            .ifPresent(sendToAzrael());
-                } catch (Exception ex) {
-                    System.out.println(ex);
-                }
+                fundRequestContract.getEventParameters(FUNDED_EVENT, log)
+                        .ifPresent(sendToAzrael());
             } catch (Exception ex) {
-                System.out.println(ex);
+                logger.error("unable to get live event parameters", ex);
             }
         });
+    }
+
+    private boolean isValidEvent(EventValues eventParameters) {
+        return eventParameters.getNonIndexedValues().size() == 2
+                && eventParameters.getIndexedValues().size() == 1;
     }
 
     private Consumer<EventValues> sendToAzrael() {
@@ -95,7 +99,15 @@ public class FundRequestEventListener {
                 final FundedEvent fundedEvent = new FundedEvent(
                         eventValues.getIndexedValues().get(0).getValue().toString(),
                         eventValues.getNonIndexedValues().get(0).getValue().toString(),
-                        eventValues.getNonIndexedValues().get(1).getValue().toString());
+                        new String(((byte[]) eventValues.getNonIndexedValues().get(1).getValue()))
+                                .chars()
+                                .filter(c -> c != 0)
+                                .mapToObj(c -> (char) c)
+                                .collect(StringBuilder::new,
+                                        StringBuilder::appendCodePoint, StringBuilder::append)
+                                .toString()
+                );
+
                 rabbitTemplate.convertAndSend("azrael_rinkeby", objectMapper.writeValueAsString(fundedEvent));
             } catch (final Exception ex) {
                 logger.error("Unable to get event from log", ex);
