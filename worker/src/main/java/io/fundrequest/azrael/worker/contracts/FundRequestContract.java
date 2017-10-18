@@ -44,6 +44,10 @@ public class FundRequestContract extends Contract {
         return executeCallSingleValueReturn(function);
     }
 
+    public String getBalance(final String data) throws ExecutionException, InterruptedException {
+        return getBalance(Arrays.copyOf(data.getBytes(), 32)).getValue().toString();
+    }
+
     public Optional<EventValues> getEventParameters(
             Event event, Log log) {
 

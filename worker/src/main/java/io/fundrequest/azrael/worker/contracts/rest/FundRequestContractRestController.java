@@ -10,18 +10,20 @@ import static org.springframework.web.bind.annotation.RequestMethod.POST;
 
 @RequestMapping(value = "/rest")
 @RestController
-public class FundRequestContractRestService {
+public class FundRequestContractRestController {
 
     @Autowired
     private FundRequestContract fundRequestContract;
 
     @RequestMapping(value = "/balance", method = POST)
-    public long getBalance(@RequestBody final String data) {
-        //TODO: remove stub and call fundrequestcontract with data -> byte[]
-        if (data != null && data.equals("Davy")) {
-            return 100;
-        } else {
-            return 0;
+    public String getBalance(@RequestBody final String data) {
+        if (data.getBytes().length > 32) {
+            throw new IllegalArgumentException("data can only be max 32 bytes");
+        }
+        try {
+            return fundRequestContract.getBalance(data);
+        } catch (Exception ex) {
+            throw new IllegalArgumentException("error while trying to call conract", ex);
         }
     }
 }
