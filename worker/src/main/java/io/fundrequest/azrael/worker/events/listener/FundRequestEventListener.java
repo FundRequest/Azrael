@@ -101,7 +101,7 @@ public class FundRequestEventListener {
             try {
                 final FundedEvent fundedEvent = new FundedEvent(
                         transactionHash,
-                        eventValues.getIndexedValues().get(0).getValue().toString(),
+                        eventValues.getIndexedValues().get(0).toString(),
                         eventValues.getNonIndexedValues().get(0).getValue().toString(),
                         new String(((byte[]) eventValues.getNonIndexedValues().get(1).getValue()))
                                 .chars()
