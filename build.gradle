@@ -9,6 +9,7 @@ buildscript {
         maven { url "http://repo.spring.io/release" }
     }
     dependencies {
+        classpath('se.transmode.gradle:gradle-docker:1.2')
         classpath("org.springframework.boot:spring-boot-gradle-plugin:${theSpringBootVersion}")
         classpath "io.spring.gradle:dependency-management-plugin:${theDependencyManagementPlugin}"
     }

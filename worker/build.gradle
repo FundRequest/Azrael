@@ -1,4 +1,6 @@
 apply plugin: 'org.springframework.boot'
+apply plugin: 'docker'
+
 
 dependencies {
     compile("org.springframework.boot:spring-boot-starter")
@@ -27,4 +29,16 @@ springBoot {
 bootRun {
     systemProperties System.properties
     addResources = true
+}
+
+
+task buildDocker(type: Docker, dependsOn: build) {
+    applicationName = jar.baseName
+    dockerfile = file('Dockerfile')
+    doFirst {
+        copy {
+            from jar
+            into "${stageDir}"
+        }
+    }
 }
