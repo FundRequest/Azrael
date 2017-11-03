@@ -35,6 +35,8 @@ bootRun {
 task buildDocker(type: Docker, dependsOn: build) {
     applicationName = jar.baseName
     dockerfile = file('Dockerfile')
+    tag = "${project.group}/${applicationName}"
+    version="latest"
     doFirst {
         copy {
             from jar
