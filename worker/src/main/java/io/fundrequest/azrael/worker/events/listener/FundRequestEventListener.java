@@ -65,12 +65,14 @@ public class FundRequestEventListener {
 
         fundRequestContract = new FundRequestContract(fundrequestContractAddress, web3j, Credentials.create(ECKeyPair.create(BigInteger.ZERO)), BigInteger.TEN, BigInteger.ONE);
 
+        logger.info("starting historic subscription");
         events().subscribe((log) -> {
             if (log.getLogs() != null && !log.getLogs().isEmpty()) {
                 log.getLogs()
                         .forEach((logItem) -> {
                             try {
-                                String transactionHash = ((EthLog.LogObject) logItem).getTransactionHash();
+                                logger.info("Received historic event");
+                                final String transactionHash = ((EthLog.LogObject) logItem).getTransactionHash();
                                 fundRequestContract.getEventParameters(FUNDED_EVENT, (Log) logItem.get())
                                         .filter(this::isValidEvent)
                                         .ifPresent(sendToAzrael(transactionHash));
@@ -81,8 +83,10 @@ public class FundRequestEventListener {
             }
         });
 
+        logger.info("starting live subscription");
         live().subscribe((log) -> {
             try {
+                logger.info("Received Live Log!");
                 fundRequestContract.getEventParameters(FUNDED_EVENT, log)
                         .ifPresent(sendToAzrael(log.getTransactionHash()));
             } catch (Exception ex) {
