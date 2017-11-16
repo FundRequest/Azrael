@@ -1,6 +1,7 @@
 io:
   fundrequest:
     azrael:
+      queue: 'azrael_rinkeby'
       worker:
         endpoint:
           token:

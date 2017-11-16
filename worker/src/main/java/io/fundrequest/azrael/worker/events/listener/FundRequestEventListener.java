@@ -57,6 +57,8 @@ public class FundRequestEventListener {
     private ObjectMapper objectMapper;
     @Value("${io.fundrequest.contract.address}")
     private String fundrequestContractAddress;
+    @Value("${io.fundrequest.azrael.queue}")
+    private String fundrequestAzraelQueue;
     @Autowired
     private RabbitTemplate rabbitTemplate;
 
@@ -117,7 +119,7 @@ public class FundRequestEventListener {
                         eventValues.getNonIndexedValues().get(2).getValue().toString()
                 );
 
-                rabbitTemplate.convertAndSend("azrael_rinkeby", objectMapper.writeValueAsString(fundedEvent));
+                rabbitTemplate.convertAndSend(fundrequestAzraelQueue, objectMapper.writeValueAsString(fundedEvent));
             } catch (final Exception ex) {
                 logger.error("Unable to get event from log", ex);
             }
