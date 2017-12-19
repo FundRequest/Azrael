@@ -45,10 +45,13 @@ public class FundRequestEventListener {
     private static final Event FUNDED_EVENT = new Event("Funded",
             Arrays.asList(new TypeReference<Address>() {
             }),
-            Arrays.asList(new TypeReference<Uint256>() {
-            }, new TypeReference<Bytes32>() {
-            }, new TypeReference<Utf8String>() {
-            }));
+            Arrays.asList(
+                    new TypeReference<Bytes32>() {
+                    }, new TypeReference<Bytes32>() {
+                    }, new TypeReference<Utf8String>() {
+                    },
+                    new TypeReference<Uint256>() {
+                    }));
 
 
     @Autowired
@@ -57,6 +60,8 @@ public class FundRequestEventListener {
     private ObjectMapper objectMapper;
     @Value("${io.fundrequest.contract.address}")
     private String fundrequestContractAddress;
+    @Value("${io.fundrequest.azrael.queue}")
+    private String fundrequestAzraelQueue;
     @Autowired
     private RabbitTemplate rabbitTemplate;
 
@@ -65,12 +70,14 @@ public class FundRequestEventListener {
 
         fundRequestContract = new FundRequestContract(fundrequestContractAddress, web3j, Credentials.create(ECKeyPair.create(BigInteger.ZERO)), BigInteger.TEN, BigInteger.ONE);
 
+        logger.info("starting historic subscription");
         events().subscribe((log) -> {
             if (log.getLogs() != null && !log.getLogs().isEmpty()) {
                 log.getLogs()
                         .forEach((logItem) -> {
                             try {
-                                String transactionHash = ((EthLog.LogObject) logItem).getTransactionHash();
+                                logger.info("Received historic event");
+                                final String transactionHash = ((EthLog.LogObject) logItem).getTransactionHash();
                                 fundRequestContract.getEventParameters(FUNDED_EVENT, (Log) logItem.get())
                                         .filter(this::isValidEvent)
                                         .ifPresent(sendToAzrael(transactionHash));
@@ -81,8 +88,10 @@ public class FundRequestEventListener {
             }
         });
 
+        logger.info("starting live subscription");
         live().subscribe((log) -> {
             try {
+                logger.info("Received Live Log!");
                 fundRequestContract.getEventParameters(FUNDED_EVENT, log)
                         .ifPresent(sendToAzrael(log.getTransactionHash()));
             } catch (Exception ex) {
@@ -92,7 +101,7 @@ public class FundRequestEventListener {
     }
 
     private boolean isValidEvent(EventValues eventParameters) {
-        return eventParameters.getNonIndexedValues().size() == 3
+        return eventParameters.getNonIndexedValues().size() == 4
                 && eventParameters.getIndexedValues().size() == 1;
     }
 
@@ -102,7 +111,13 @@ public class FundRequestEventListener {
                 final FundedEvent fundedEvent = new FundedEvent(
                         transactionHash,
                         eventValues.getIndexedValues().get(0).toString(),
-                        eventValues.getNonIndexedValues().get(0).getValue().toString(),
+                        new String(((byte[]) eventValues.getNonIndexedValues().get(0).getValue()))
+                                .chars()
+                                .filter(c -> c != 0)
+                                .mapToObj(c -> (char) c)
+                                .collect(StringBuilder::new,
+                                        StringBuilder::appendCodePoint, StringBuilder::append)
+                                .toString(),
                         new String(((byte[]) eventValues.getNonIndexedValues().get(1).getValue()))
                                 .chars()
                                 .filter(c -> c != 0)
@@ -110,10 +125,11 @@ public class FundRequestEventListener {
                                 .collect(StringBuilder::new,
                                         StringBuilder::appendCodePoint, StringBuilder::append)
                                 .toString(),
-                        eventValues.getNonIndexedValues().get(2).getValue().toString()
+                        eventValues.getNonIndexedValues().get(2).getValue().toString(),
+                        eventValues.getNonIndexedValues().get(3).getValue().toString()
                 );
 
-                rabbitTemplate.convertAndSend("azrael_rinkeby", objectMapper.writeValueAsString(fundedEvent));
+                rabbitTemplate.convertAndSend(fundrequestAzraelQueue, objectMapper.writeValueAsString(fundedEvent));
             } catch (final Exception ex) {
                 logger.error("Unable to get event from log", ex);
             }

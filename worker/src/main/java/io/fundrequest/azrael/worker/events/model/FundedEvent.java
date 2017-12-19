@@ -10,8 +10,9 @@ import lombok.NoArgsConstructor;
 public class FundedEvent {
     private String transactionHash;
     private String from;
+    private String platform;
+    private String platformId;
+    private String url;
     private String amount;
-    private String data;
-    private String user;
 
 }
