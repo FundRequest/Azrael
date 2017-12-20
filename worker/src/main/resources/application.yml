@@ -14,5 +14,7 @@ server:
 
 spring:
   rabbitmq:
-    host: localhost
+    host: fr-rabbitmq
     password: default_pass
+    virtual-host: azrael
+    port: 5672
