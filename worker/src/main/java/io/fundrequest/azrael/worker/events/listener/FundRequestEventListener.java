@@ -24,6 +24,7 @@ import org.web3j.crypto.ECKeyPair;
 import org.web3j.protocol.Web3j;
 import org.web3j.protocol.core.DefaultBlockParameterName;
 import org.web3j.protocol.core.methods.request.EthFilter;
+import org.web3j.protocol.core.methods.response.EthBlock;
 import org.web3j.protocol.core.methods.response.EthLog;
 import org.web3j.protocol.core.methods.response.Log;
 import rx.Observable;
@@ -65,7 +66,7 @@ public class FundRequestEventListener {
 
         fundRequestContract = new FundRequestContract(fundrequestContractAddress, web3j, Credentials.create(ECKeyPair.create(BigInteger.ZERO)), BigInteger.TEN, BigInteger.ONE);
 
-        logger.info("starting historic subscription");
+        logger.debug("starting historic subscription");
         events().subscribe((log) -> {
             if (log.getLogs() != null && !log.getLogs().isEmpty()) {
                 log.getLogs()
@@ -73,9 +74,10 @@ public class FundRequestEventListener {
                             try {
                                 logger.info("Received historic event");
                                 final String transactionHash = ((EthLog.LogObject) logItem).getTransactionHash();
+                                final String blockhash = ((EthLog.LogObject) logItem).getBlockHash();
                                 fundRequestContract.getEventParameters(FUNDED_EVENT, (Log) logItem.get())
                                         .filter(this::isValidEvent)
-                                        .ifPresent(sendToAzrael(transactionHash));
+                                        .ifPresent(sendToAzrael(transactionHash, blockhash));
                             } catch (Exception ex) {
                                 logger.error("unable to get event parameters", ex);
                             }
@@ -83,12 +85,12 @@ public class FundRequestEventListener {
             }
         });
 
-        logger.info("starting live subscription");
+        logger.debug("starting live subscription");
         live().subscribe((log) -> {
             try {
                 logger.info("Received Live Log!");
                 fundRequestContract.getEventParameters(FUNDED_EVENT, log)
-                        .ifPresent(sendToAzrael(log.getTransactionHash()));
+                        .ifPresent(sendToAzrael(log.getTransactionHash(), log.getBlockHash()));
             } catch (Exception ex) {
                 logger.error("unable to get live event parameters", ex);
             }
@@ -100,9 +102,10 @@ public class FundRequestEventListener {
                 && eventParameters.getIndexedValues().size() == 1;
     }
 
-    private Consumer<EventValues> sendToAzrael(String transactionHash) {
+    private Consumer<EventValues> sendToAzrael(final String transactionHash, final String blockHash) {
         return eventValues -> {
             try {
+                long timestamp = getTimestamp(blockHash);
                 final FundedEvent fundedEvent = new FundedEvent(
                         transactionHash,
                         eventValues.getIndexedValues().get(0).toString(),
@@ -114,7 +117,8 @@ public class FundRequestEventListener {
                                 .collect(StringBuilder::new,
                                         StringBuilder::appendCodePoint, StringBuilder::append)
                                 .toString(),
-                        eventValues.getNonIndexedValues().get(2).getValue().toString()
+                        eventValues.getNonIndexedValues().get(2).getValue().toString(),
+                        timestamp
                 );
 
                 rabbitTemplate.convertAndSend("azrael_rinkeby", objectMapper.writeValueAsString(fundedEvent));
@@ -122,6 +126,15 @@ public class FundRequestEventListener {
                 logger.error("Unable to get event from log", ex);
             }
         };
+    }
+
+    private long getTimestamp(final String blockHash) throws java.io.IOException {
+        final EthBlock send = web3j.ethGetBlockByHash(blockHash, false).send();
+        if (send.getBlock() != null) {
+            return send.getBlock().getTimestamp().longValue() * 1000;
+        } else {
+            return 0;
+        }
     }
 
     private EthFilter fundedEventFilter() {

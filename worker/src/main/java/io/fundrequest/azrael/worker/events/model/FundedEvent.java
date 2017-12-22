@@ -13,5 +13,6 @@ public class FundedEvent {
     private String amount;
     private String data;
     private String user;
+    private long timestamp;
 
 }
