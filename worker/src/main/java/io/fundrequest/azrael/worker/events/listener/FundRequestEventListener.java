@@ -70,7 +70,6 @@ public class FundRequestEventListener {
     public void listenToEvents() {
 
         fundRequestContract = new FundRequestContract(fundrequestContractAddress, web3j, Credentials.create(ECKeyPair.create(BigInteger.ZERO)), BigInteger.TEN, BigInteger.ONE);
-
         logger.debug("starting historic subscription");
         events().subscribe((log) -> {
             if (log.getLogs() != null && !log.getLogs().isEmpty()) {

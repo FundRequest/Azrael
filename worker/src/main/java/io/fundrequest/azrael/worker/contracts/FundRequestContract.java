@@ -14,8 +14,13 @@ import org.web3j.protocol.core.methods.response.Log;
 import org.web3j.tx.Contract;
 import org.web3j.tx.TransactionManager;
 
+import java.io.IOException;
 import java.math.BigInteger;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 
 public class FundRequestContract extends Contract {
@@ -41,7 +46,11 @@ public class FundRequestContract extends Contract {
                 Collections.singletonList(new TypeReference<Uint256>() {
                 })
         );
-        return executeCallSingleValueReturn(function);
+        try {
+            return executeCallSingleValueReturn(function);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public String getBalance(final String data) throws ExecutionException, InterruptedException {
