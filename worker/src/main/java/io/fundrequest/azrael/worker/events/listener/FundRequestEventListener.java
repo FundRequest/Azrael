@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.web3j.abi.EventEncoder;
 import org.web3j.abi.EventValues;
@@ -28,6 +29,7 @@ import org.web3j.protocol.core.methods.response.EthBlock;
 import org.web3j.protocol.core.methods.response.EthLog;
 import org.web3j.protocol.core.methods.response.Log;
 import rx.Observable;
+import rx.Subscription;
 
 import javax.annotation.PostConstruct;
 import java.math.BigInteger;
@@ -66,12 +68,40 @@ public class FundRequestEventListener {
     @Autowired
     private RabbitTemplate rabbitTemplate;
 
+    private Subscription liveSubscription;
+
     @PostConstruct
     public void listenToEvents() {
-
         fundRequestContract = new FundRequestContract(fundrequestContractAddress, web3j, Credentials.create(ECKeyPair.create(BigInteger.ZERO)), BigInteger.TEN, BigInteger.ONE);
+        subscribeToHistoric();
+    }
+
+    @Scheduled(fixedRate = (60000 * 5))
+    private void subscribeToLive() {
+        if (this.liveSubscription == null) {
+            logger.debug("starting live subscription");
+            this.liveSubscription = doLiveSubscription();
+        } else {
+            this.liveSubscription.unsubscribe();
+            this.liveSubscription = doLiveSubscription();
+        }
+    }
+
+    private Subscription doLiveSubscription() {
+        return live().subscribe((log) -> {
+            try {
+                logger.info("Received Live Log!");
+                fundRequestContract.getEventParameters(FUNDED_EVENT, log)
+                        .ifPresent(sendToAzrael(log.getTransactionHash(), log.getBlockHash()));
+            } catch (Exception ex) {
+                logger.error("unable to get live event parameters", ex);
+            }
+        });
+    }
+
+    private void subscribeToHistoric() {
         logger.debug("starting historic subscription");
-        events().subscribe((log) -> {
+        historic().subscribe((log) -> {
             if (log.getLogs() != null && !log.getLogs().isEmpty()) {
                 log.getLogs()
                         .forEach((logItem) -> {
@@ -86,17 +116,6 @@ public class FundRequestEventListener {
                                 logger.error("unable to get event parameters", ex);
                             }
                         });
-            }
-        });
-
-        logger.debug("starting live subscription");
-        live().subscribe((log) -> {
-            try {
-                logger.info("Received Live Log!");
-                fundRequestContract.getEventParameters(FUNDED_EVENT, log)
-                        .ifPresent(sendToAzrael(log.getTransactionHash(), log.getBlockHash()));
-            } catch (Exception ex) {
-                logger.error("unable to get live event parameters", ex);
             }
         });
     }
@@ -156,7 +175,7 @@ public class FundRequestEventListener {
         return ethFilter;
     }
 
-    private Observable<EthLog> events() {
+    private Observable<EthLog> historic() {
         return web3j.ethGetLogs(fundedEventFilter()).observable();
     }
 
