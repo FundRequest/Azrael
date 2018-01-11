@@ -21,6 +21,7 @@ public class ClaimSigningService {
         String plainMessage = createMessageToSign(command);
         BigInteger key = new BigInteger(signingAccount, 16);
         ECKeyPair ecKeyPair = ECKeyPair.create(key.toByteArray());
+
         Sign.SignatureData signMessage = Sign.signMessage(plainMessage.getBytes(), ecKeyPair);
         String r = "0x" + Hex.encodeHexString(signMessage.getR());
         String s = "0x" + Hex.encodeHexString(signMessage.getS());
@@ -28,7 +29,7 @@ public class ClaimSigningService {
                 .platform(command.getPlatform())
                 .platformId(command.getPlatformId())
                 .solver(command.getSolver())
-                .address(command.getAddress())
+                .address(command.getAddress().toLowerCase())
                 .r(r)
                 .s(s)
                 .v((int) signMessage.getV())
@@ -36,6 +37,6 @@ public class ClaimSigningService {
     }
 
     private String createMessageToSign(SignClaimCommand command) {
-        return command.getPlatform() + "_" + command.getPlatformId() + "_" + command.getSolver() + "_" + command.getAddress();
+        return command.getPlatform() + "_" + command.getPlatformId() + "_" + command.getSolver() + "_" + command.getAddress().toLowerCase();
     }
 }
