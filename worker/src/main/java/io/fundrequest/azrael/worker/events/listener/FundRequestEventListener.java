@@ -1,9 +1,12 @@
 package io.fundrequest.azrael.worker.events.listener;
 
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.fundrequest.azrael.worker.contracts.ContractEvent;
 import io.fundrequest.azrael.worker.contracts.FundRequestContract;
-import io.fundrequest.azrael.worker.events.model.FundedEvent;
+import io.fundrequest.azrael.worker.events.model.ClaimEventDto;
+import io.fundrequest.azrael.worker.events.model.FundEventDto;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,6 +37,7 @@ import rx.Subscription;
 import javax.annotation.PostConstruct;
 import java.math.BigInteger;
 import java.util.Arrays;
+import java.util.List;
 import java.util.function.Consumer;
 
 @Component
@@ -56,6 +60,17 @@ public class FundRequestEventListener {
                     new TypeReference<Uint256>() {
                     }));
 
+    private static final Event CLAIMED_EVENT = new Event("Claimed",
+            Arrays.asList(new TypeReference<Address>() {
+            }),
+            Arrays.asList(
+                    new TypeReference<Bytes32>() {
+                    }, new TypeReference<Bytes32>() {
+                    }, new TypeReference<Utf8String>() {
+                    },
+                    new TypeReference<Uint256>() {
+                    }));
+
 
     @Autowired
     private Web3j web3j;
@@ -63,8 +78,10 @@ public class FundRequestEventListener {
     private ObjectMapper objectMapper;
     @Value("${io.fundrequest.contract.address}")
     private String fundrequestContractAddress;
-    @Value("${io.fundrequest.azrael.queue}")
-    private String fundrequestAzraelQueue;
+    @Value("${io.fundrequest.azrael.queue.fund}")
+    private String fundQueue;
+    @Value("${io.fundrequest.azrael.queue.claim}")
+    private String claimQueue;
     @Autowired
     private RabbitTemplate rabbitTemplate;
 
@@ -91,7 +108,7 @@ public class FundRequestEventListener {
         return live().subscribe((log) -> {
             try {
                 logger.info("Received Live Log!");
-                fundRequestContract.getEventParameters(FUNDED_EVENT, log)
+                fundRequestContract.getEventParameters(getEvent(log.getTopics()), log)
                         .ifPresent(sendToAzrael(log.getTransactionHash(), log.getBlockHash()));
             } catch (Exception ex) {
                 logger.error("unable to get live event parameters", ex);
@@ -109,7 +126,8 @@ public class FundRequestEventListener {
                                 logger.info("Received historic event");
                                 final String transactionHash = ((EthLog.LogObject) logItem).getTransactionHash();
                                 final String blockhash = ((EthLog.LogObject) logItem).getBlockHash();
-                                fundRequestContract.getEventParameters(FUNDED_EVENT, (Log) logItem.get())
+                                Event event = getEvent(((EthLog.LogObject) logItem).getTopics());
+                                fundRequestContract.getEventParameters(event, (Log) logItem.get())
                                         .filter(this::isValidEvent)
                                         .ifPresent(sendToAzrael(transactionHash, blockhash));
                             } catch (Exception ex) {
@@ -120,42 +138,91 @@ public class FundRequestEventListener {
         });
     }
 
-    private boolean isValidEvent(EventValues eventParameters) {
-        return eventParameters.getNonIndexedValues().size() == 4
-                && eventParameters.getIndexedValues().size() == 1;
+    private Event getEvent(List<String> topics) {
+        Event event;
+        if (topics.get(0).equals(EventEncoder.encode(FUNDED_EVENT))) {
+            event = FUNDED_EVENT;
+        } else {
+            event = CLAIMED_EVENT;
+        }
+        return event;
     }
 
-    private Consumer<EventValues> sendToAzrael(final String transactionHash, final String blockHash) {
-        return eventValues -> {
-            try {
-                long timestamp = getTimestamp(blockHash);
-                final FundedEvent fundedEvent = new FundedEvent(
-                        transactionHash,
-                        eventValues.getIndexedValues().get(0).toString(),
-                        new String(((byte[]) eventValues.getNonIndexedValues().get(0).getValue()))
-                                .chars()
-                                .filter(c -> c != 0)
-                                .mapToObj(c -> (char) c)
-                                .collect(StringBuilder::new,
-                                        StringBuilder::appendCodePoint, StringBuilder::append)
-                                .toString(),
-                        new String(((byte[]) eventValues.getNonIndexedValues().get(1).getValue()))
-                                .chars()
-                                .filter(c -> c != 0)
-                                .mapToObj(c -> (char) c)
-                                .collect(StringBuilder::new,
-                                        StringBuilder::appendCodePoint, StringBuilder::append)
-                                .toString(),
-                        eventValues.getNonIndexedValues().get(2).getValue().toString(),
-                        eventValues.getNonIndexedValues().get(3).getValue().toString(),
-                        timestamp
-                );
+    private boolean isValidEvent(ContractEvent contractEvent) {
+        EventValues eventParameters = contractEvent.getEventValues();
+        return eventParameters.getNonIndexedValues().size() > 0
+                && eventParameters.getIndexedValues().size() > 0;
+    }
 
-                rabbitTemplate.convertAndSend(fundrequestAzraelQueue, objectMapper.writeValueAsString(fundedEvent));
+    private Consumer<ContractEvent> sendToAzrael(final String transactionHash, final String blockHash) {
+        return contractEvent -> {
+            try {
+                EventValues eventValues = contractEvent.getEventValues();
+                long timestamp = getTimestamp(blockHash);
+                switch (contractEvent.getEventType()) {
+                    case FUNDED:
+                        sendFundEvent(transactionHash, eventValues, timestamp);
+                        break;
+                    case CLAIMED:
+                        sendClaimEvent(transactionHash, eventValues, timestamp);
+                        break;
+                    default:
+                        logger.debug("Unknown event, not updating");
+                }
             } catch (final Exception ex) {
                 logger.error("Unable to get event from log", ex);
             }
         };
+    }
+
+    private void sendClaimEvent(String transactionHash, EventValues eventValues, long timestamp) throws JsonProcessingException {
+        final ClaimEventDto dto = new ClaimEventDto(
+                transactionHash,
+                eventValues.getIndexedValues().get(0).toString(),
+                new String(((byte[]) eventValues.getNonIndexedValues().get(0).getValue()))
+                        .chars()
+                        .filter(c -> c != 0)
+                        .mapToObj(c -> (char) c)
+                        .collect(StringBuilder::new,
+                                StringBuilder::appendCodePoint, StringBuilder::append)
+                        .toString(),
+                new String(((byte[]) eventValues.getNonIndexedValues().get(1).getValue()))
+                        .chars()
+                        .filter(c -> c != 0)
+                        .mapToObj(c -> (char) c)
+                        .collect(StringBuilder::new,
+                                StringBuilder::appendCodePoint, StringBuilder::append)
+                        .toString(),
+                eventValues.getNonIndexedValues().get(2).getValue().toString(),
+                eventValues.getNonIndexedValues().get(3).getValue().toString(),
+                timestamp
+        );
+        rabbitTemplate.convertAndSend(claimQueue, objectMapper.writeValueAsString(dto));
+    }
+
+    private void sendFundEvent(String transactionHash, EventValues eventValues, long timestamp) throws JsonProcessingException {
+        final FundEventDto fundEventDto = new FundEventDto(
+                transactionHash,
+                eventValues.getIndexedValues().get(0).toString(),
+                new String(((byte[]) eventValues.getNonIndexedValues().get(0).getValue()))
+                        .chars()
+                        .filter(c -> c != 0)
+                        .mapToObj(c -> (char) c)
+                        .collect(StringBuilder::new,
+                                StringBuilder::appendCodePoint, StringBuilder::append)
+                        .toString(),
+                new String(((byte[]) eventValues.getNonIndexedValues().get(1).getValue()))
+                        .chars()
+                        .filter(c -> c != 0)
+                        .mapToObj(c -> (char) c)
+                        .collect(StringBuilder::new,
+                                StringBuilder::appendCodePoint, StringBuilder::append)
+                        .toString(),
+                eventValues.getNonIndexedValues().get(2).getValue().toString(),
+                eventValues.getNonIndexedValues().get(3).getValue().toString(),
+                timestamp
+        );
+        rabbitTemplate.convertAndSend(fundQueue, objectMapper.writeValueAsString(fundEventDto));
     }
 
     private long getTimestamp(final String blockHash) throws java.io.IOException {
@@ -167,19 +234,18 @@ public class FundRequestEventListener {
         }
     }
 
-    private EthFilter fundedEventFilter() {
+    private EthFilter contractEventsFilter() {
         EthFilter ethFilter = new EthFilter(DefaultBlockParameterName.EARLIEST,
                 DefaultBlockParameterName.LATEST, fundrequestContractAddress);
-        String encodedEventSignature = EventEncoder.encode(FUNDED_EVENT);
-        ethFilter.addSingleTopic(encodedEventSignature);
+        ethFilter.addOptionalTopics(EventEncoder.encode(FUNDED_EVENT), EventEncoder.encode(CLAIMED_EVENT));
         return ethFilter;
     }
 
     private Observable<EthLog> historic() {
-        return web3j.ethGetLogs(fundedEventFilter()).observable();
+        return web3j.ethGetLogs(contractEventsFilter()).observable();
     }
 
     private Observable<Log> live() {
-        return web3j.ethLogObservable(fundedEventFilter());
+        return web3j.ethLogObservable(contractEventsFilter());
     }
 }

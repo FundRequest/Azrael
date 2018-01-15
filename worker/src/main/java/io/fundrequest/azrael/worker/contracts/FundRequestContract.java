@@ -1,5 +1,6 @@
 package io.fundrequest.azrael.worker.contracts;
 
+import org.apache.commons.lang3.StringUtils;
 import org.web3j.abi.EventEncoder;
 import org.web3j.abi.EventValues;
 import org.web3j.abi.FunctionReturnDecoder;
@@ -57,9 +58,12 @@ public class FundRequestContract extends Contract {
         return getBalance(Arrays.copyOf(data.getBytes(), 32)).getValue().toString();
     }
 
-    public Optional<EventValues> getEventParameters(
+    public Optional<ContractEvent> getEventParameters(
             Event event, Log log) {
-
+        Optional<ContractEventType> eventType = getEventType(event);
+        if(!eventType.isPresent()) {
+            return Optional.empty();
+        }
         final List<String> topics = log.getTopics();
         final String encodedEventSignature = EventEncoder.encode(event);
         if (!topics.get(0).equals(encodedEventSignature)) {
@@ -76,6 +80,20 @@ public class FundRequestContract extends Contract {
                     topics.get(i + 1), indexedParameters.get(i));
             indexedValues.add(value);
         }
-        return Optional.of(new EventValues(indexedValues, nonIndexedValues));
+        return Optional.of(new ContractEvent(eventType.get(), new EventValues(indexedValues, nonIndexedValues)));
     }
+
+    private Optional<ContractEventType> getEventType(Event event) {
+        ContractEventType eventType = null;
+        if (StringUtils.isNotBlank(event.getName())) {
+            try {
+                eventType = ContractEventType.valueOf(event.getName().toUpperCase());
+                return Optional.of(eventType);
+            } catch(Exception e) {
+                return Optional.empty();
+            }
+        }
+        return Optional.empty();
+    }
+
 }
