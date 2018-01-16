@@ -46,8 +46,6 @@ public class FundRequestEventListener {
 
     private static final Logger logger = LoggerFactory.getLogger(FundRequestEventListener.class);
 
-    private FundRequestContract fundRequestContract;
-
 
     private static final Event FUNDED_EVENT = new Event("Funded",
             Arrays.asList(new TypeReference<Address>() {
@@ -83,13 +81,15 @@ public class FundRequestEventListener {
     @Value("${io.fundrequest.azrael.queue.claim}")
     private String claimQueue;
     @Autowired
+    private FundRequestContract fundRequestContract;
+
+    @Autowired
     private RabbitTemplate rabbitTemplate;
 
     private Subscription liveSubscription;
 
     @PostConstruct
     public void listenToEvents() {
-        fundRequestContract = new FundRequestContract(fundrequestContractAddress, web3j, Credentials.create(ECKeyPair.create(BigInteger.ZERO)), BigInteger.TEN, BigInteger.ONE);
         subscribeToHistoric();
     }
 

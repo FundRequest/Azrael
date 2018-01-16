@@ -1,4 +1,4 @@
-package io.fundrequest.azrael.worker.contracts.claim;
+package io.fundrequest.azrael.worker.contracts.claim.controller;
 
 
 import io.fundrequest.azrael.worker.contracts.claim.sign.ClaimSignature;

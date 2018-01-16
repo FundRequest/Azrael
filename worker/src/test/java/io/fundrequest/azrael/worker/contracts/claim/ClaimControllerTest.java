@@ -2,6 +2,7 @@ package io.fundrequest.azrael.worker.contracts.claim;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import io.fundrequest.azrael.worker.contracts.claim.controller.ClaimController;
 import io.fundrequest.azrael.worker.contracts.claim.sign.ClaimSignature;
 import io.fundrequest.azrael.worker.contracts.claim.sign.ClaimSigningService;
 import io.fundrequest.azrael.worker.contracts.claim.sign.SignClaimCommand;
