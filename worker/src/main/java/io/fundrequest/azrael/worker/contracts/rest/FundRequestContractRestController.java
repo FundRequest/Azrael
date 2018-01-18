@@ -21,7 +21,7 @@ public class FundRequestContractRestController {
             throw new IllegalArgumentException("data can only be max 32 bytes");
         }
         try {
-            return fundRequestContract.getBalance(data);
+            return fundRequestContract.getBalance(data, "0");
         } catch (Exception ex) {
             throw new IllegalArgumentException("error while trying to call conract", ex);
         }
