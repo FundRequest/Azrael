@@ -47,6 +47,8 @@ public class FundRequestContract extends Contract {
     }
 
     private boolean doClaim(byte[] platform, byte[] platformId, final String solver, final String solverAddress, byte[] r, byte[] s, int v) {
+
+        //wip
         final Function claim = new Function("claim",
                 Arrays.asList(
                         new Bytes32(platform),
