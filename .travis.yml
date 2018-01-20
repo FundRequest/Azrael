@@ -5,3 +5,10 @@ cache:
   directories:
   - ".autoconf"
   - "$HOME/.m2"
+
+after_success:
+  - if [ "$TRAVIS_BRANCH" == "develop" ]; then
+    docker build -t fundrequestio/azrael:dev worker/build/docker;
+    docker login -u "$DOCKER_USERNAME" -p "$DOCKER_PASSWORD";
+    docker push fundrequestio/azrael:dev;
+    fi
