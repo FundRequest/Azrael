@@ -9,4 +9,4 @@ cache:
 after_success:
   - docker build -t fundrequestio/azrael:"$TRAVIS_PULL_REQUEST" worker
   - docker login -u "$DOCKER_USERNAME" -p "$DOCKER_PASSWORD"
-  - docker push fundrequestio/azrael:"$TRAVIS_PULL_REQUEST"
+  - docker push fundrequestio/azrael:"$TRAVIS_BRANCH"
