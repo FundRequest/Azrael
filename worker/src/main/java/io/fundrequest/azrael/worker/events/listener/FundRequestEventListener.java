@@ -23,8 +23,6 @@ import org.web3j.abi.datatypes.Event;
 import org.web3j.abi.datatypes.Utf8String;
 import org.web3j.abi.datatypes.generated.Bytes32;
 import org.web3j.abi.datatypes.generated.Uint256;
-import org.web3j.crypto.Credentials;
-import org.web3j.crypto.ECKeyPair;
 import org.web3j.protocol.Web3j;
 import org.web3j.protocol.core.DefaultBlockParameterName;
 import org.web3j.protocol.core.methods.request.EthFilter;
@@ -35,7 +33,6 @@ import rx.Observable;
 import rx.Subscription;
 
 import javax.annotation.PostConstruct;
-import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
@@ -52,7 +49,7 @@ public class FundRequestEventListener {
             }),
             Arrays.asList(
                     new TypeReference<Bytes32>() {
-                    }, new TypeReference<Bytes32>() {
+                    }, new TypeReference<Utf8String>() {
                     }, new TypeReference<Utf8String>() {
                     },
                     new TypeReference<Uint256>() {
@@ -63,7 +60,7 @@ public class FundRequestEventListener {
             }),
             Arrays.asList(
                     new TypeReference<Bytes32>() {
-                    }, new TypeReference<Bytes32>() {
+                    }, new TypeReference<Utf8String>() {
                     }, new TypeReference<Utf8String>() {
                     },
                     new TypeReference<Uint256>() {
@@ -186,13 +183,7 @@ public class FundRequestEventListener {
                         .collect(StringBuilder::new,
                                 StringBuilder::appendCodePoint, StringBuilder::append)
                         .toString(),
-                new String(((byte[]) eventValues.getNonIndexedValues().get(1).getValue()))
-                        .chars()
-                        .filter(c -> c != 0)
-                        .mapToObj(c -> (char) c)
-                        .collect(StringBuilder::new,
-                                StringBuilder::appendCodePoint, StringBuilder::append)
-                        .toString(),
+                eventValues.getNonIndexedValues().get(1).getValue().toString(),
                 eventValues.getNonIndexedValues().get(2).getValue().toString(),
                 eventValues.getNonIndexedValues().get(3).getValue().toString(),
                 timestamp
@@ -211,15 +202,8 @@ public class FundRequestEventListener {
                         .collect(StringBuilder::new,
                                 StringBuilder::appendCodePoint, StringBuilder::append)
                         .toString(),
-                new String(((byte[]) eventValues.getNonIndexedValues().get(1).getValue()))
-                        .chars()
-                        .filter(c -> c != 0)
-                        .mapToObj(c -> (char) c)
-                        .collect(StringBuilder::new,
-                                StringBuilder::appendCodePoint, StringBuilder::append)
-                        .toString(),
+                eventValues.getNonIndexedValues().get(1).getValue().toString(),
                 eventValues.getNonIndexedValues().get(2).getValue().toString(),
-                eventValues.getNonIndexedValues().get(3).getValue().toString(),
                 timestamp
         );
         rabbitTemplate.convertAndSend(fundQueue, objectMapper.writeValueAsString(fundEventDto));

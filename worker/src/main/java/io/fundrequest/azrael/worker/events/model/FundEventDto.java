@@ -12,7 +12,6 @@ public class FundEventDto {
     private String from;
     private String platform;
     private String platformId;
-    private String url;
     private String amount;
     private long timestamp;
 
