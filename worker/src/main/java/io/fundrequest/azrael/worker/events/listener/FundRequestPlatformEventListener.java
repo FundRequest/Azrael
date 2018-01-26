@@ -3,8 +3,8 @@ package io.fundrequest.azrael.worker.events.listener;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.fundrequest.azrael.worker.contracts.ContractEvent;
-import io.fundrequest.azrael.worker.contracts.FundRequestContract;
+import io.fundrequest.azrael.worker.contracts.platform.PlatformEvent;
+import io.fundrequest.azrael.worker.contracts.platform.FundRequestContract;
 import io.fundrequest.azrael.worker.events.model.ClaimEventDto;
 import io.fundrequest.azrael.worker.events.model.FundEventDto;
 import lombok.extern.slf4j.Slf4j;
@@ -23,8 +23,6 @@ import org.web3j.abi.datatypes.Event;
 import org.web3j.abi.datatypes.Utf8String;
 import org.web3j.abi.datatypes.generated.Bytes32;
 import org.web3j.abi.datatypes.generated.Uint256;
-import org.web3j.crypto.Credentials;
-import org.web3j.crypto.ECKeyPair;
 import org.web3j.protocol.Web3j;
 import org.web3j.protocol.core.DefaultBlockParameterName;
 import org.web3j.protocol.core.methods.request.EthFilter;
@@ -35,16 +33,15 @@ import rx.Observable;
 import rx.Subscription;
 
 import javax.annotation.PostConstruct;
-import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
 
 @Component
 @Slf4j
-public class FundRequestEventListener {
+public class FundRequestPlatformEventListener {
 
-    private static final Logger logger = LoggerFactory.getLogger(FundRequestEventListener.class);
+    private static final Logger logger = LoggerFactory.getLogger(FundRequestPlatformEventListener.class);
 
 
     private static final Event FUNDED_EVENT = new Event("Funded",
@@ -148,18 +145,18 @@ public class FundRequestEventListener {
         return event;
     }
 
-    private boolean isValidEvent(ContractEvent contractEvent) {
-        EventValues eventParameters = contractEvent.getEventValues();
+    private boolean isValidEvent(PlatformEvent platformEvent) {
+        EventValues eventParameters = platformEvent.getEventValues();
         return eventParameters.getNonIndexedValues().size() > 0
                 && eventParameters.getIndexedValues().size() > 0;
     }
 
-    private Consumer<ContractEvent> sendToAzrael(final String transactionHash, final String blockHash) {
-        return contractEvent -> {
+    private Consumer<PlatformEvent> sendToAzrael(final String transactionHash, final String blockHash) {
+        return platformEvent -> {
             try {
-                EventValues eventValues = contractEvent.getEventValues();
+                EventValues eventValues = platformEvent.getEventValues();
                 long timestamp = getTimestamp(blockHash);
-                switch (contractEvent.getEventType()) {
+                switch (platformEvent.getEventType()) {
                     case FUNDED:
                         sendFundEvent(transactionHash, eventValues, timestamp);
                         break;

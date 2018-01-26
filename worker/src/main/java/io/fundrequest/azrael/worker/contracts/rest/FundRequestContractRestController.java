@@ -1,6 +1,6 @@
 package io.fundrequest.azrael.worker.contracts.rest;
 
-import io.fundrequest.azrael.worker.contracts.FundRequestContract;
+import io.fundrequest.azrael.worker.contracts.platform.FundRequestContract;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;

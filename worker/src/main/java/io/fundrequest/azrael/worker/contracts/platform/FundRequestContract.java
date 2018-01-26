@@ -1,4 +1,4 @@
-package io.fundrequest.azrael.worker.contracts;
+package io.fundrequest.azrael.worker.contracts.platform;
 
 import io.fundrequest.azrael.worker.contracts.claim.sign.ClaimSignature;
 import org.apache.commons.lang3.StringUtils;
@@ -68,9 +68,9 @@ public class FundRequestContract extends Contract {
         return Arrays.copyOf(data.getBytes(), 32);
     }
 
-    public Optional<ContractEvent> getEventParameters(
+    public Optional<PlatformEvent> getEventParameters(
             Event event, Log log) {
-        final Optional<ContractEventType> eventType = getEventType(event);
+        final Optional<PlatformEventType> eventType = getEventType(event);
         if (!eventType.isPresent()) {
             return Optional.empty();
         }
@@ -90,7 +90,7 @@ public class FundRequestContract extends Contract {
                     topics.get(i + 1), indexedParameters.get(i));
             indexedValues.add(value);
         }
-        return Optional.of(new ContractEvent(eventType.get(), new EventValues(indexedValues, nonIndexedValues)));
+        return Optional.of(new PlatformEvent(eventType.get(), new EventValues(indexedValues, nonIndexedValues)));
     }
 
     private Uint256 getBalance(byte[] data, byte[] platformId) throws ExecutionException, InterruptedException {
@@ -106,10 +106,10 @@ public class FundRequestContract extends Contract {
         }
     }
 
-    private Optional<ContractEventType> getEventType(Event event) {
+    private Optional<PlatformEventType> getEventType(Event event) {
         if (StringUtils.isNotBlank(event.getName())) {
             try {
-                return Optional.of(ContractEventType.valueOf(event.getName().toUpperCase()));
+                return Optional.of(PlatformEventType.valueOf(event.getName().toUpperCase()));
             } catch (Exception e) {
                 return Optional.empty();
             }
