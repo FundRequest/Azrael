@@ -8,6 +8,7 @@ io:
       worker:
         endpoint:
           token:
+          url: https://ropsten.fundrequest.io
           url: https://ropsten.davyvanroy.be
     tge:
       address: ''
