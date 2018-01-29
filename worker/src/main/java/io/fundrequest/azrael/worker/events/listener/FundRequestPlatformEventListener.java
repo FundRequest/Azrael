@@ -3,8 +3,8 @@ package io.fundrequest.azrael.worker.events.listener;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.fundrequest.azrael.worker.contracts.platform.PlatformEvent;
 import io.fundrequest.azrael.worker.contracts.platform.FundRequestContract;
+import io.fundrequest.azrael.worker.contracts.platform.PlatformEvent;
 import io.fundrequest.azrael.worker.events.model.ClaimEventDto;
 import io.fundrequest.azrael.worker.events.model.FundEventDto;
 import lombok.extern.slf4j.Slf4j;
@@ -49,7 +49,6 @@ public class FundRequestPlatformEventListener {
             }),
             Arrays.asList(
                     new TypeReference<Bytes32>() {
-                    }, new TypeReference<Utf8String>() {
                     }, new TypeReference<Utf8String>() {
                     },
                     new TypeReference<Uint256>() {
