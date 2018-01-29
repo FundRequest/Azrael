@@ -49,7 +49,7 @@ public class FundRequestPlatformEventListener {
             }),
             Arrays.asList(
                     new TypeReference<Bytes32>() {
-                    }, new TypeReference<Bytes32>() {
+                    }, new TypeReference<Utf8String>() {
                     }, new TypeReference<Utf8String>() {
                     },
                     new TypeReference<Uint256>() {
@@ -60,7 +60,7 @@ public class FundRequestPlatformEventListener {
             }),
             Arrays.asList(
                     new TypeReference<Bytes32>() {
-                    }, new TypeReference<Bytes32>() {
+                    }, new TypeReference<Utf8String>() {
                     }, new TypeReference<Utf8String>() {
                     },
                     new TypeReference<Uint256>() {
@@ -183,13 +183,7 @@ public class FundRequestPlatformEventListener {
                         .collect(StringBuilder::new,
                                 StringBuilder::appendCodePoint, StringBuilder::append)
                         .toString(),
-                new String(((byte[]) eventValues.getNonIndexedValues().get(1).getValue()))
-                        .chars()
-                        .filter(c -> c != 0)
-                        .mapToObj(c -> (char) c)
-                        .collect(StringBuilder::new,
-                                StringBuilder::appendCodePoint, StringBuilder::append)
-                        .toString(),
+                eventValues.getNonIndexedValues().get(1).getValue().toString(),
                 eventValues.getNonIndexedValues().get(2).getValue().toString(),
                 eventValues.getNonIndexedValues().get(3).getValue().toString(),
                 timestamp
@@ -208,15 +202,8 @@ public class FundRequestPlatformEventListener {
                         .collect(StringBuilder::new,
                                 StringBuilder::appendCodePoint, StringBuilder::append)
                         .toString(),
-                new String(((byte[]) eventValues.getNonIndexedValues().get(1).getValue()))
-                        .chars()
-                        .filter(c -> c != 0)
-                        .mapToObj(c -> (char) c)
-                        .collect(StringBuilder::new,
-                                StringBuilder::appendCodePoint, StringBuilder::append)
-                        .toString(),
+                eventValues.getNonIndexedValues().get(1).getValue().toString(),
                 eventValues.getNonIndexedValues().get(2).getValue().toString(),
-                eventValues.getNonIndexedValues().get(3).getValue().toString(),
                 timestamp
         );
         rabbitTemplate.convertAndSend(fundQueue, objectMapper.writeValueAsString(fundEventDto));
