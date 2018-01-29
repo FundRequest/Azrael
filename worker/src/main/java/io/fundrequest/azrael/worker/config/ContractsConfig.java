@@ -3,6 +3,7 @@ package io.fundrequest.azrael.worker.config;
 import io.fundrequest.azrael.worker.contracts.crowdsale.FundRequestTokenGenerationContract;
 import io.fundrequest.azrael.worker.contracts.platform.FundRequestContract;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.web3j.crypto.Credentials;
@@ -24,6 +25,7 @@ public class ContractsConfig {
     }
 
     @Bean
+    @ConditionalOnProperty(name = "io.fundrequest.azrael.tge.address")
     public FundRequestTokenGenerationContract provideTokenGenerationContract(
             @Value("${io.fundrequest.tge.address}") final String address,
             @Value("${io.fundrequest.tge.binary}") final String binary,
