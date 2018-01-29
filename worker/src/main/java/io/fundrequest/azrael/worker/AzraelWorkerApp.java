@@ -27,7 +27,7 @@ public class AzraelWorkerApp {
                 env.getProperty("server.port"),
                 InetAddress.getLocalHost().getHostAddress(),
                 env.getProperty("server.port"),
-                env.getProperty("io.fundrequest.azrael.contract.address"),
+                env.getProperty("io.fundrequest.contract.address"),
                 env.getActiveProfiles());
     }
 }
