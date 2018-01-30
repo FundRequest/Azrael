@@ -47,8 +47,6 @@ public class FundRequestContract extends Contract {
     }
 
     private boolean doClaim(byte[] platform, byte[] platformId, final String solver, final String solverAddress, byte[] r, byte[] s, int v) {
-
-        //wip
         final Function claim = new Function("claim",
                 Arrays.asList(
                         new Bytes32(platform),
@@ -61,7 +59,12 @@ public class FundRequestContract extends Contract {
                 ),
                 Arrays.asList(new TypeReference<Bool>() {
                 }));
-        return true;
+        try {
+            Bool bool = this.executeCallSingleValueReturn(claim, Bool.class);
+            return bool.getValue();
+        } catch (final Exception exception) {
+            return false;
+        }
     }
 
     private byte[] toContractBytes32(final String data) {
