@@ -8,7 +8,6 @@ io:
         transfer: 'azrael_ropsten_transfer'
       worker:
         endpoint:
-          token:
           url: https://ropsten.fundrequest.io
     tge:
       address: ''
