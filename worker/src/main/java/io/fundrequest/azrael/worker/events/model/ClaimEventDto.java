@@ -7,12 +7,13 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class FundedEvent {
+public class ClaimEventDto {
     private String transactionHash;
-    private String from;
+    private String solverAddress;
     private String platform;
     private String platformId;
-    private String url;
+    private String solver;
     private String amount;
+    private long timestamp;
 
 }

@@ -20,12 +20,18 @@ public class AzraelWorkerApp {
         log.info("\n----------------------------------------------------------\n\t"
                         + "Application '{}' is running! Access URLs:\n\t"
                         + "Local: \t\thttp://localhost:{}\n\t"
-                        + "External: \thttp://{}:{}\n\t" +
-                        "Profile(s): \t{}\n----------------------------------------------------------",
+                        + "External: \thttp://{}:{}\n\t"
+                        + "FR Contract Location: \t{}\n\t"
+                        + "FR Token Location: \t{}\n\t"
+                        + "FR TGE Location: \t{}\n\t"
+                        + "Profile(s): \t{}\n----------------------------------------------------------",
                 env.getProperty("spring.application.name"),
                 env.getProperty("server.port"),
                 InetAddress.getLocalHost().getHostAddress(),
                 env.getProperty("server.port"),
+                env.getProperty("io.fundrequest.contract.address"),
+                env.getProperty("io.fundrequest.token.address"),
+                env.getProperty("io.fundrequest.tge.address"),
                 env.getActiveProfiles());
     }
 }

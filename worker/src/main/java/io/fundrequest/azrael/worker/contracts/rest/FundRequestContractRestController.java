@@ -1,6 +1,6 @@
 package io.fundrequest.azrael.worker.contracts.rest;
 
-import io.fundrequest.azrael.worker.contracts.FundRequestContract;
+import io.fundrequest.azrael.worker.contracts.platform.FundRequestContract;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -21,7 +21,7 @@ public class FundRequestContractRestController {
             throw new IllegalArgumentException("data can only be max 32 bytes");
         }
         try {
-            return fundRequestContract.getBalance(data);
+            return fundRequestContract.getBalance(data, "0");
         } catch (Exception ex) {
             throw new IllegalArgumentException("error while trying to call conract", ex);
         }
