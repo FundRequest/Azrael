@@ -32,7 +32,7 @@ import java.util.function.Consumer;
 
 @Component
 @Slf4j
-@ConditionalOnProperty(name = "io.fundrequest.azrael.tge.address")
+@ConditionalOnProperty(name = "io.fundrequest.tge.address")
 public class FundRequestTGEEventListener {
 
 

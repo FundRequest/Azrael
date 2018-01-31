@@ -33,7 +33,7 @@ import java.util.List;
 import java.util.function.Consumer;
 
 @Component
-@ConditionalOnProperty(name = "io.fundrequest.azrael.token.address")
+@ConditionalOnProperty(name = "io.fundrequest.token.address")
 public class FundRequestTokenListener {
 
     private static final Logger logger = LoggerFactory.getLogger(FundRequestTokenListener.class);

@@ -17,7 +17,7 @@ import java.math.BigInteger;
 public class ContractsConfig {
 
     @Bean
-    @ConditionalOnProperty(name = "io.fundrequest.azrael.contract.address")
+    @ConditionalOnProperty(name = "io.fundrequest.contract.address")
     public FundRequestContract providePlatformContract(
             @Value("${io.fundrequest.contract.address}") final String address,
             @Value("${io.fundrequest.contract.binary}") final String binary,
@@ -27,7 +27,7 @@ public class ContractsConfig {
     }
 
     @Bean
-    @ConditionalOnProperty(name = "io.fundrequest.azrael.tge.address")
+    @ConditionalOnProperty(name = "io.fundrequest.tge.address")
     public FundRequestTokenGenerationContract provideTokenGenerationContract(
             @Value("${io.fundrequest.tge.address}") final String address,
             @Value("${io.fundrequest.tge.binary}") final String binary,
@@ -37,7 +37,7 @@ public class ContractsConfig {
     }
 
     @Bean
-    @ConditionalOnProperty(name = "io.fundrequest.azrael.token.address")
+    @ConditionalOnProperty(name = "io.fundrequest.token.address")
     public FundRequestToken provideTokenContract(
             @Value("${io.fundrequest.token.address}") final String address,
             @Value("${io.fundrequest.token.binary}") final String binary,

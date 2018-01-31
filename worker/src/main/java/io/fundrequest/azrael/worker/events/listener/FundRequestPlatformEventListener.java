@@ -39,7 +39,7 @@ import java.util.List;
 import java.util.function.Consumer;
 
 @Component
-@ConditionalOnProperty(name = "io.fundrequest.azrael.contract.address")
+@ConditionalOnProperty(name = "io.fundrequest.contract.address")
 public class FundRequestPlatformEventListener {
 
     private static final Logger logger = LoggerFactory.getLogger(FundRequestPlatformEventListener.class);
