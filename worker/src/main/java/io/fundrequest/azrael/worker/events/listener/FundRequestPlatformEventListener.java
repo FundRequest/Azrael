@@ -7,7 +7,6 @@ import io.fundrequest.azrael.worker.contracts.platform.FundRequestContract;
 import io.fundrequest.azrael.worker.contracts.platform.PlatformEvent;
 import io.fundrequest.azrael.worker.events.model.ClaimEventDto;
 import io.fundrequest.azrael.worker.events.model.FundEventDto;
-import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
