@@ -61,6 +61,7 @@ public class FundRequestContract extends Contract {
                 }));
         try {
             Bool bool = this.executeCallSingleValueReturn(claim, Bool.class);
+            this.executeTransaction(claim);
             return bool.getValue();
         } catch (final Exception exception) {
             return false;
