@@ -2,6 +2,7 @@ package io.fundrequest.azrael.worker.config;
 
 import io.fundrequest.azrael.worker.contracts.crowdsale.FundRequestTokenGenerationContract;
 import io.fundrequest.azrael.worker.contracts.platform.FundRequestContract;
+import io.fundrequest.azrael.worker.contracts.platform.FundRequestToken;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
@@ -16,7 +17,8 @@ import java.math.BigInteger;
 public class ContractsConfig {
 
     @Bean
-    public FundRequestContract provideContract(
+    @ConditionalOnProperty(name = "io.fundrequest.azrael.contract.address")
+    public FundRequestContract providePlatformContract(
             @Value("${io.fundrequest.contract.address}") final String address,
             @Value("${io.fundrequest.contract.binary}") final String binary,
             final Web3j web3j) {
@@ -31,6 +33,16 @@ public class ContractsConfig {
             @Value("${io.fundrequest.tge.binary}") final String binary,
             final Web3j web3j) {
         return new FundRequestTokenGenerationContract(
+                binary, address, web3j, Credentials.create(ECKeyPair.create(BigInteger.ONE)), BigInteger.ONE, BigInteger.ONE);
+    }
+
+    @Bean
+    @ConditionalOnProperty(name = "io.fundrequest.azrael.token.address")
+    public FundRequestToken provideTokenContract(
+            @Value("${io.fundrequest.token.address}") final String address,
+            @Value("${io.fundrequest.token.binary}") final String binary,
+            final Web3j web3j) {
+        return new FundRequestToken(
                 binary, address, web3j, Credentials.create(ECKeyPair.create(BigInteger.ONE)), BigInteger.ONE, BigInteger.ONE);
     }
 }

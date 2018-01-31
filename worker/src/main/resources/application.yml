@@ -5,11 +5,15 @@ io:
         fund: 'azrael_ropsten_fund'
         claim: 'azrael_ropsten_claim'
         paid: 'azrael_ropsten_paid'
+        transfer: 'azrael_ropsten_transfer'
       worker:
         endpoint:
           token:
           url: https://ropsten.fundrequest.io
     tge:
+      address: ''
+      binary: ''
+    token:
       address: ''
       binary: ''
     contract:

@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.web3j.abi.EventEncoder;
@@ -38,7 +39,7 @@ import java.util.List;
 import java.util.function.Consumer;
 
 @Component
-@Slf4j
+@ConditionalOnProperty(name = "io.fundrequest.azrael.contract.address")
 public class FundRequestPlatformEventListener {
 
     private static final Logger logger = LoggerFactory.getLogger(FundRequestPlatformEventListener.class);
@@ -78,7 +79,6 @@ public class FundRequestPlatformEventListener {
     private String claimQueue;
     @Autowired
     private FundRequestContract fundRequestContract;
-
     @Autowired
     private RabbitTemplate rabbitTemplate;
 
@@ -122,7 +122,7 @@ public class FundRequestPlatformEventListener {
                                 logger.info("Received historic event");
                                 final String transactionHash = ((EthLog.LogObject) logItem).getTransactionHash();
                                 final String blockhash = ((EthLog.LogObject) logItem).getBlockHash();
-                                Event event = getEvent(((EthLog.LogObject) logItem).getTopics());
+                                final Event event = getEvent(((EthLog.LogObject) logItem).getTopics());
                                 fundRequestContract.getEventParameters(event, (Log) logItem.get())
                                         .filter(this::isValidEvent)
                                         .ifPresent(sendToAzrael(transactionHash, blockhash));
