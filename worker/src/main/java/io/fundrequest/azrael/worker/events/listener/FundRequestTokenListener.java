@@ -74,6 +74,7 @@ public class FundRequestTokenListener {
     @Autowired
     private RabbitTemplate rabbitTemplate;
     private Subscription liveSubscription;
+    @Autowired
     private FundRequestToken tokenContract;
 
 

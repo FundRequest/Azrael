@@ -10,9 +10,9 @@ import lombok.NoArgsConstructor;
 public class TransferEventDto {
 
     private String transactionHash;
-    private String amount;
     private String from;
     private String to;
+    private String amount;
     private long timestamp;
 
 }
