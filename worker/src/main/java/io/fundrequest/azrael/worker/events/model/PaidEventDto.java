@@ -14,5 +14,6 @@ public class PaidEventDto {
     private String weiAmount;
     private String tokenAmount;
     private Long timestamp;
+    private boolean personalCapActive;
 
 }

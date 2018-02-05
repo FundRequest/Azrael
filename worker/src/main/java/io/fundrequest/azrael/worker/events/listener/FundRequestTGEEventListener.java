@@ -3,7 +3,7 @@ package io.fundrequest.azrael.worker.events.listener;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.fundrequest.azrael.worker.contracts.crowdsale.FundRequestTokenGenerationContract;
-import io.fundrequest.azrael.worker.contracts.crowdsale.PaidEvent;
+import io.fundrequest.azrael.worker.contracts.crowdsale.event.PaidEvent;
 import io.fundrequest.azrael.worker.events.model.PaidEventDto;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -40,10 +40,8 @@ public class FundRequestTGEEventListener {
             Arrays.asList(new TypeReference<Address>() {
             }),
             Arrays.asList(
-                    new TypeReference<Bytes32>() {
-                    }, new TypeReference<Bytes32>() {
-                    },
                     new TypeReference<Uint256>() {
+                    }, new TypeReference<Uint256>() {
                     }));
 
     @Autowired
@@ -97,8 +95,8 @@ public class FundRequestTGEEventListener {
     private Consumer<PaidEvent> sendToAzrael(final String transactionHash, final String blockHash) {
         return platformEvent -> {
             try {
-                EventValues eventValues = platformEvent.getEventValues();
-                long timestamp = getTimestamp(blockHash);
+                final EventValues eventValues = platformEvent.getEventValues();
+                final long timestamp = getTimestamp(blockHash);
                 sendPaidEvent(transactionHash, eventValues, timestamp);
             } catch (final Exception ex) {
                 log.error("Unable to get event from log", ex);
@@ -107,12 +105,19 @@ public class FundRequestTGEEventListener {
     }
 
     private void sendPaidEvent(String transactionHash, EventValues eventValues, long timestamp) throws JsonProcessingException {
+        Boolean personalCapActive;
+        try {
+            personalCapActive = tokenGenerationContract.personalCapActive().getValue();
+        } catch (final Exception ex) {
+            personalCapActive = true;
+        }
         final PaidEventDto paidEvent = new PaidEventDto(
                 transactionHash,
                 eventValues.getIndexedValues().get(0).toString(),
                 eventValues.getNonIndexedValues().get(0).getValue().toString(),
                 eventValues.getNonIndexedValues().get(1).getValue().toString(),
-                timestamp
+                timestamp,
+                personalCapActive
         );
         rabbitTemplate.convertAndSend(paidQueue, objectMapper.writeValueAsString(paidEvent));
     }

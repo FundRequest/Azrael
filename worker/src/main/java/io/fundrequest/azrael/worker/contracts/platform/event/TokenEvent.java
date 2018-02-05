@@ -1,4 +1,4 @@
-package io.fundrequest.azrael.worker.contracts.platform;
+package io.fundrequest.azrael.worker.contracts.platform.event;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

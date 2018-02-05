@@ -1,6 +1,8 @@
 package io.fundrequest.azrael.worker.contracts.platform;
 
 import io.fundrequest.azrael.worker.contracts.claim.sign.ClaimSignature;
+import io.fundrequest.azrael.worker.contracts.platform.event.PlatformEvent;
+import io.fundrequest.azrael.worker.contracts.platform.event.PlatformEventType;
 import org.apache.commons.lang3.StringUtils;
 import org.web3j.abi.EventEncoder;
 import org.web3j.abi.EventValues;
