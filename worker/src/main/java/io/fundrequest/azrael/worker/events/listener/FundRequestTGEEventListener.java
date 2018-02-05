@@ -16,8 +16,8 @@ import org.web3j.abi.EventEncoder;
 import org.web3j.abi.EventValues;
 import org.web3j.abi.TypeReference;
 import org.web3j.abi.datatypes.Address;
+import org.web3j.abi.datatypes.Bool;
 import org.web3j.abi.datatypes.Event;
-import org.web3j.abi.datatypes.generated.Bytes32;
 import org.web3j.abi.datatypes.generated.Uint256;
 import org.web3j.protocol.Web3j;
 import org.web3j.protocol.core.DefaultBlockParameterName;
@@ -42,6 +42,7 @@ public class FundRequestTGEEventListener {
             Arrays.asList(
                     new TypeReference<Uint256>() {
                     }, new TypeReference<Uint256>() {
+                    }, new TypeReference<Bool>() {
                     }));
 
     @Autowired
@@ -105,19 +106,13 @@ public class FundRequestTGEEventListener {
     }
 
     private void sendPaidEvent(String transactionHash, EventValues eventValues, long timestamp) throws JsonProcessingException {
-        Boolean personalCapActive;
-        try {
-            personalCapActive = tokenGenerationContract.personalCapActive().getValue();
-        } catch (final Exception ex) {
-            personalCapActive = true;
-        }
         final PaidEventDto paidEvent = new PaidEventDto(
                 transactionHash,
                 eventValues.getIndexedValues().get(0).toString(),
                 eventValues.getNonIndexedValues().get(0).getValue().toString(),
                 eventValues.getNonIndexedValues().get(1).getValue().toString(),
                 timestamp,
-                personalCapActive
+                (boolean) eventValues.getNonIndexedValues().get(2).getValue()
         );
         rabbitTemplate.convertAndSend(paidQueue, objectMapper.writeValueAsString(paidEvent));
     }
