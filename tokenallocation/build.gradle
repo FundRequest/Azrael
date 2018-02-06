@@ -1,0 +1,49 @@
+apply plugin: 'org.springframework.boot'
+apply plugin: 'docker'
+
+
+dependencies {
+    compile("org.springframework.boot:spring-boot-starter")
+    compile("org.springframework.boot:spring-boot-starter-web")
+    compile("org.springframework.boot:spring-boot-starter-actuator")
+    compile("org.springframework.boot:spring-boot-devtools")
+    compile("org.springframework.boot:spring-boot-starter-amqp")
+
+    compileOnly 'org.projectlombok:lombok:1.16.18'
+
+    compile group: 'org.web3j', name: 'core', version: '3.2.0'
+    compile group: 'commons-codec', name: 'commons-codec', version: '1.11'
+    compile group: 'org.apache.commons', name: 'commons-lang3', version: '3.7'
+
+
+    testCompile("org.springframework.boot:spring-boot-starter-test")
+    testCompile 'org.assertj:assertj-core:3.8.0'
+}
+
+jar {
+    baseName = 'worker'
+    version = null
+}
+
+springBoot {
+    executable = true
+}
+
+bootRun {
+    systemProperties System.properties
+    addResources = true
+}
+
+
+task buildDocker(type: Docker, dependsOn: build) {
+    applicationName = jar.baseName
+    dockerfile = file('Dockerfile')
+    tag = "${project.group}/azrael"
+    version="latest"
+    doFirst {
+        copy {
+            from jar
+            into "${stageDir}/target/"
+        }
+    }
+}

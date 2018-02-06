@@ -1,0 +1,10 @@
+io:
+  fundrequest:
+    azrael:
+      tokenallocation:
+        endpoint:
+          url: https://ropsten.fundrequest.io
+    tge:
+      address: '0x93040a4f0fff7f975615ad69592631d207406d84'
+    token:
+      address: '0x5a481b10a0138e0db94126e9b6ca2188a18cb21c'

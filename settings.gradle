@@ -1,3 +1,4 @@
 rootProject.name = theName
 
 include 'worker'
+include 'tokenallocation'
