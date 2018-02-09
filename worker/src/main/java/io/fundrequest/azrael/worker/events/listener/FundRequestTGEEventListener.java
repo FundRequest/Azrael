@@ -76,7 +76,7 @@ public class FundRequestTGEEventListener {
         return live().subscribe((logz) -> {
             try {
                 tokenGenerationContract.getEventParameters(PAID_EVENT, logz)
-                        .ifPresent(sendToAzrael(logz.getTransactionHash(), logz.getBlockHash()));
+                        .ifPresent(sendToAzrael(logz));
             } catch (Exception ex) {
                 log.error("unable to get live event parameters", ex);
             }
@@ -93,21 +93,22 @@ public class FundRequestTGEEventListener {
     }
 
 
-    private Consumer<PaidEvent> sendToAzrael(final String transactionHash, final String blockHash) {
+    private Consumer<PaidEvent> sendToAzrael(Log logz) {
         return platformEvent -> {
             try {
                 final EventValues eventValues = platformEvent.getEventValues();
-                final long timestamp = getTimestamp(blockHash);
-                sendPaidEvent(transactionHash, eventValues, timestamp);
+                final long timestamp = getTimestamp(logz.getBlockHash());
+                sendPaidEvent(logz.getTransactionHash(), logz.getLogIndexRaw(), eventValues, timestamp);
             } catch (final Exception ex) {
                 log.error("Unable to get event from log", ex);
             }
         };
     }
 
-    private void sendPaidEvent(String transactionHash, EventValues eventValues, long timestamp) throws JsonProcessingException {
+    private void sendPaidEvent(String transactionHash, String logIndex, EventValues eventValues, long timestamp) throws JsonProcessingException {
         final PaidEventDto paidEvent = new PaidEventDto(
                 transactionHash,
+                logIndex,
                 eventValues.getIndexedValues().get(0).toString(),
                 eventValues.getNonIndexedValues().get(0).getValue().toString(),
                 eventValues.getNonIndexedValues().get(1).getValue().toString(),

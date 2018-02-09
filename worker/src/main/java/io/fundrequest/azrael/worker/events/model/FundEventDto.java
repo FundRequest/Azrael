@@ -9,6 +9,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class FundEventDto {
     private String transactionHash;
+    private String logIndex;
     private String from;
     private String platform;
     private String platformId;

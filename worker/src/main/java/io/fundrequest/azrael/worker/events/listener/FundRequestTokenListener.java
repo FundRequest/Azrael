@@ -93,7 +93,7 @@ public class FundRequestTokenListener {
             try {
                 logger.info("Received Live Log!");
                 tokenContract.getEventParameters(getEvent(log.getTopics()), log)
-                        .ifPresent(sendToAzrael(log.getTransactionHash(), log.getBlockHash()));
+                        .ifPresent(sendToAzrael(log));
             } catch (Exception ex) {
                 logger.error("unable to get live event parameters", ex);
             }
@@ -111,14 +111,14 @@ public class FundRequestTokenListener {
     }
 
 
-    private Consumer<TokenEvent> sendToAzrael(final String transactionHash, final String blockHash) {
+    private Consumer<TokenEvent> sendToAzrael(Log log) {
         return tokenEvent -> {
             try {
                 final EventValues eventValues = tokenEvent.getEventValues();
-                final long timestamp = getTimestamp(blockHash);
+                final long timestamp = getTimestamp(log.getBlockHash());
                 switch (tokenEvent.getEventType()) {
                     case TRANSFER:
-                        sendTransferEvent(transactionHash, eventValues, timestamp);
+                        sendTransferEvent(log.getTransactionHash(), log.getLogIndexRaw(), eventValues, timestamp);
                         break;
                     default:
                         logger.debug("Unknown event, not updating");
@@ -129,9 +129,10 @@ public class FundRequestTokenListener {
         };
     }
 
-    private void sendTransferEvent(String transactionHash, EventValues eventValues, long timestamp) throws JsonProcessingException {
+    private void sendTransferEvent(String transactionHash, String logIndex, EventValues eventValues, long timestamp) throws JsonProcessingException {
         final TransferEventDto transferEventDto = new TransferEventDto(
                 transactionHash,
+                logIndex,
                 eventValues.getIndexedValues().get(0).toString(),
                 eventValues.getIndexedValues().get(1).getValue().toString(),
                 eventValues.getNonIndexedValues().get(0).getValue().toString(),

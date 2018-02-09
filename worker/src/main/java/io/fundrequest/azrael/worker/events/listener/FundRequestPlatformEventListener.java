@@ -104,7 +104,7 @@ public class FundRequestPlatformEventListener {
             try {
                 logger.info("Received Live Log!");
                 fundRequestContract.getEventParameters(getEvent(log.getTopics()), log)
-                        .ifPresent(sendToAzrael(log.getTransactionHash(), log.getBlockHash()));
+                        .ifPresent(sendToAzrael(log));
             } catch (Exception ex) {
                 logger.error("unable to get live event parameters", ex);
             }
@@ -119,12 +119,11 @@ public class FundRequestPlatformEventListener {
                         .forEach((logItem) -> {
                             try {
                                 logger.info("Received historic event");
-                                final String transactionHash = ((EthLog.LogObject) logItem).getTransactionHash();
-                                final String blockhash = ((EthLog.LogObject) logItem).getBlockHash();
                                 final Event event = getEvent(((EthLog.LogObject) logItem).getTopics());
-                                fundRequestContract.getEventParameters(event, (Log) logItem.get())
+                                Log logz = (Log) logItem.get();
+                                fundRequestContract.getEventParameters(event, logz)
                                         .filter(this::isValidEvent)
-                                        .ifPresent(sendToAzrael(transactionHash, blockhash));
+                                        .ifPresent(sendToAzrael(logz));
                             } catch (Exception ex) {
                                 logger.error("unable to get event parameters", ex);
                             }
@@ -149,17 +148,17 @@ public class FundRequestPlatformEventListener {
                 && eventParameters.getIndexedValues().size() > 0;
     }
 
-    private Consumer<PlatformEvent> sendToAzrael(final String transactionHash, final String blockHash) {
+    private Consumer<PlatformEvent> sendToAzrael(Log log) {
         return platformEvent -> {
             try {
                 EventValues eventValues = platformEvent.getEventValues();
-                long timestamp = getTimestamp(blockHash);
+                long timestamp = getTimestamp(log.getBlockHash());
                 switch (platformEvent.getEventType()) {
                     case FUNDED:
-                        sendFundEvent(transactionHash, eventValues, timestamp);
+                        sendFundEvent(log.getTransactionHash(), log.getLogIndexRaw(), eventValues, timestamp);
                         break;
                     case CLAIMED:
-                        sendClaimEvent(transactionHash, eventValues, timestamp);
+                        sendClaimEvent(log.getTransactionHash(), log.getLogIndexRaw(), eventValues, timestamp);
                         break;
                     default:
                         logger.debug("Unknown event, not updating");
@@ -170,9 +169,10 @@ public class FundRequestPlatformEventListener {
         };
     }
 
-    private void sendClaimEvent(String transactionHash, EventValues eventValues, long timestamp) throws JsonProcessingException {
+    private void sendClaimEvent(String transactionHash, String logIndex, EventValues eventValues, long timestamp) throws JsonProcessingException {
         final ClaimEventDto dto = new ClaimEventDto(
                 transactionHash,
+                logIndex,
                 eventValues.getIndexedValues().get(0).toString(),
                 new String(((byte[]) eventValues.getNonIndexedValues().get(0).getValue()))
                         .chars()
@@ -189,9 +189,10 @@ public class FundRequestPlatformEventListener {
         rabbitTemplate.convertAndSend(claimQueue, objectMapper.writeValueAsString(dto));
     }
 
-    private void sendFundEvent(String transactionHash, EventValues eventValues, long timestamp) throws JsonProcessingException {
+    private void sendFundEvent(String transactionHash, String logIndex, EventValues eventValues, long timestamp) throws JsonProcessingException {
         final FundEventDto fundEventDto = new FundEventDto(
                 transactionHash,
+                logIndex,
                 eventValues.getIndexedValues().get(0).toString(),
                 new String(((byte[]) eventValues.getNonIndexedValues().get(0).getValue()))
                         .chars()

@@ -10,6 +10,7 @@ import lombok.NoArgsConstructor;
 public class TransferEventDto {
 
     private String transactionHash;
+    private String logIndex;
     private String from;
     private String to;
     private String amount;
