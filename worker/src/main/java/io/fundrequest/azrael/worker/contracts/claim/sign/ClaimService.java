@@ -35,8 +35,8 @@ public class ClaimService {
     private String gasPrice;
     private String gasLimit;
 
-    public ClaimService(@Value("${io.fundrequest.sign.account}") String signingAccount, Web3j web3j, @Value("${io.fundrequest.contract.address}") String fundrequestContractAddress, ObjectMapper objectMapper, @Value("${io.fundrequest.azrael.claim.gasprice}") String gasPrice, @Value("${io.fundrequest.azrael.claim.gaslimit}") String gasLimit) {
-        this.keyPair = getPrivateKey(signingAccount);
+    public ClaimService(@Value("${io.fundrequest.execute.account}") String executingAccount, Web3j web3j, @Value("${io.fundrequest.contract.address}") String fundrequestContractAddress, ObjectMapper objectMapper, @Value("${io.fundrequest.azrael.claim.gasprice}") String gasPrice, @Value("${io.fundrequest.azrael.claim.gaslimit}") String gasLimit) {
+        this.keyPair = getPrivateKey(executingAccount);
         this.web3j = web3j;
         this.fundrequestContractAddress = fundrequestContractAddress;
         this.objectMapper = objectMapper;
