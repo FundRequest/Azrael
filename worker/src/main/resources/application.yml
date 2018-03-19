@@ -6,9 +6,13 @@ io:
         claim: 'azrael_ropsten_claim'
         paid: 'azrael_ropsten_paid'
         transfer: 'azrael_ropsten_transfer'
+        approved-claim: 'approved-claims'
       worker:
         endpoint:
           url: https://ropsten.fundrequest.io
+      claim:
+        gasprice: '1000000000'
+        gaslimit: '400000'
     token:
       address: '0x23b98d4ff90a169d88bfab8b8829f0b0c0e3bce0'
       binary: ''
