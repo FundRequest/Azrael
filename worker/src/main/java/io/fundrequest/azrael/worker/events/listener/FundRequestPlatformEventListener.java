@@ -17,12 +17,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.web3j.abi.EventEncoder;
 import org.web3j.abi.EventValues;
-import org.web3j.abi.TypeReference;
-import org.web3j.abi.datatypes.Address;
 import org.web3j.abi.datatypes.Event;
-import org.web3j.abi.datatypes.Utf8String;
-import org.web3j.abi.datatypes.generated.Bytes32;
-import org.web3j.abi.datatypes.generated.Uint256;
 import org.web3j.protocol.Web3j;
 import org.web3j.protocol.core.DefaultBlockParameterName;
 import org.web3j.protocol.core.methods.request.EthFilter;
@@ -33,37 +28,17 @@ import rx.Observable;
 import rx.Subscription;
 
 import javax.annotation.PostConstruct;
-import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
+
+import static io.fundrequest.azrael.worker.contracts.platform.FundRequestContract.CLAIMED_EVENT;
+import static io.fundrequest.azrael.worker.contracts.platform.FundRequestContract.FUNDED_EVENT;
 
 @Component
 @ConditionalOnProperty(name = "io.fundrequest.contract.address")
 public class FundRequestPlatformEventListener {
 
     private static final Logger logger = LoggerFactory.getLogger(FundRequestPlatformEventListener.class);
-
-
-    private static final Event FUNDED_EVENT = new Event("Funded",
-            Arrays.asList(new TypeReference<Address>() {
-            }),
-            Arrays.asList(
-                    new TypeReference<Bytes32>() {
-                    }, new TypeReference<Utf8String>() {
-                    },
-                    new TypeReference<Uint256>() {
-                    }));
-
-    private static final Event CLAIMED_EVENT = new Event("Claimed",
-            Arrays.asList(new TypeReference<Address>() {
-            }),
-            Arrays.asList(
-                    new TypeReference<Bytes32>() {
-                    }, new TypeReference<Utf8String>() {
-                    }, new TypeReference<Utf8String>() {
-                    },
-                    new TypeReference<Uint256>() {
-                    }));
 
 
     @Autowired
@@ -184,6 +159,7 @@ public class FundRequestPlatformEventListener {
                 eventValues.getNonIndexedValues().get(1).getValue().toString(),
                 eventValues.getNonIndexedValues().get(2).getValue().toString(),
                 eventValues.getNonIndexedValues().get(3).getValue().toString(),
+                eventValues.getNonIndexedValues().get(4).getValue().toString(),
                 timestamp
         );
         rabbitTemplate.convertAndSend(claimQueue, objectMapper.writeValueAsString(dto));
@@ -203,6 +179,7 @@ public class FundRequestPlatformEventListener {
                         .toString(),
                 eventValues.getNonIndexedValues().get(1).getValue().toString(),
                 eventValues.getNonIndexedValues().get(2).getValue().toString(),
+                eventValues.getNonIndexedValues().get(3).getValue().toString(),
                 timestamp
         );
         rabbitTemplate.convertAndSend(fundQueue, objectMapper.writeValueAsString(fundEventDto));
