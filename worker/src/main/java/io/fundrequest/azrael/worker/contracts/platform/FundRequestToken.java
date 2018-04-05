@@ -22,8 +22,8 @@ import java.util.Optional;
 
 public class FundRequestToken extends Contract {
 
-    public FundRequestToken(final String contractBinary, final String contractAddress, final Web3j web3j, final Credentials credentials, final BigInteger gasPrice, final BigInteger gasLimit) {
-        super(contractBinary, contractAddress, web3j, credentials, gasPrice, gasLimit);
+    public FundRequestToken(final String contractAddress, final Web3j web3j, final Credentials credentials, final BigInteger gasPrice, final BigInteger gasLimit) {
+        super("", contractAddress, web3j, credentials, gasPrice, gasLimit);
     }
 
     public Optional<TokenEvent> getEventParameters(
