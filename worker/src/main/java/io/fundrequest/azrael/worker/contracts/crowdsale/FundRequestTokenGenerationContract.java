@@ -24,8 +24,8 @@ import java.util.concurrent.ExecutionException;
 public class FundRequestTokenGenerationContract extends Contract {
 
 
-    public FundRequestTokenGenerationContract(final String contractBinary, final String contractAddress, final Web3j web3j, final Credentials credentails, final BigInteger gasPrice, final BigInteger gasLimit) {
-        super(contractBinary, contractAddress, web3j, credentails, gasPrice, gasLimit);
+    public FundRequestTokenGenerationContract(final String contractAddress, final Web3j web3j, final Credentials credentails, final BigInteger gasPrice, final BigInteger gasLimit) {
+        super("", contractAddress, web3j, credentails, gasPrice, gasLimit);
     }
 
 

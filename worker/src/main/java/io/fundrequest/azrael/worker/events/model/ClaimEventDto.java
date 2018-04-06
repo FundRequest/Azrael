@@ -14,6 +14,7 @@ public class ClaimEventDto {
     private String platform;
     private String platformId;
     private String solver;
+    private String token;
     private String amount;
     private long timestamp;
 

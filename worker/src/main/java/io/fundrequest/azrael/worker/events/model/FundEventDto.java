@@ -13,6 +13,7 @@ public class FundEventDto {
     private String from;
     private String platform;
     private String platformId;
+    private String token;
     private String amount;
     private long timestamp;
 

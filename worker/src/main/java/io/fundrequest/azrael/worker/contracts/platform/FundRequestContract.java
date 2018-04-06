@@ -24,6 +24,30 @@ import java.util.*;
 import java.util.concurrent.ExecutionException;
 
 public class FundRequestContract extends Contract {
+
+    public static final Event FUNDED_EVENT = new Event("Funded",
+            Arrays.asList(new TypeReference<Address>() {
+            }),
+            Arrays.asList(
+                    new TypeReference<Bytes32>() {
+                    }, new TypeReference<Utf8String>() {
+                    }, new TypeReference<Address>() {
+                    },
+                    new TypeReference<Uint256>() {
+                    }));
+
+    public static final Event CLAIMED_EVENT = new Event("Claimed",
+            Arrays.asList(new TypeReference<Address>() {
+            }),
+            Arrays.asList(
+                    new TypeReference<Bytes32>() {
+                    }, new TypeReference<Utf8String>() {
+                    }, new TypeReference<Utf8String>() {
+                    }, new TypeReference<Address>() {
+                    },
+                    new TypeReference<Uint256>() {
+                    }));
+
     public FundRequestContract(final String contractBinary, final String contractAddress, final Web3j web3j, final TransactionManager transactionManager, final BigInteger gasPrice, final BigInteger gasLimit) {
         super(contractBinary, contractAddress, web3j, transactionManager, gasPrice, gasLimit);
     }
