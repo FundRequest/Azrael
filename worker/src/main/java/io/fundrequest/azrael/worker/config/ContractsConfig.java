@@ -20,10 +20,8 @@ public class ContractsConfig {
     @ConditionalOnProperty(name = "io.fundrequest.contract.address")
     public FundRequestContract providePlatformContract(
             @Value("${io.fundrequest.contract.address}") final String address,
-            @Value("${io.fundrequest.contract.binary}") final String binary,
             final Web3j web3j) {
-        return new FundRequestContract(
-                binary, address, web3j, Credentials.create(ECKeyPair.create(BigInteger.ONE)), BigInteger.ONE, BigInteger.ONE);
+        return new FundRequestContract(address, web3j, Credentials.create(ECKeyPair.create(BigInteger.ONE)), BigInteger.ONE, BigInteger.ONE);
     }
 
     @Bean

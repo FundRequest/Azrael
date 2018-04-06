@@ -16,7 +16,6 @@ import org.web3j.crypto.Credentials;
 import org.web3j.protocol.Web3j;
 import org.web3j.protocol.core.methods.response.Log;
 import org.web3j.tx.Contract;
-import org.web3j.tx.TransactionManager;
 
 import java.io.IOException;
 import java.math.BigInteger;
@@ -48,12 +47,9 @@ public class FundRequestContract extends Contract {
                     new TypeReference<Uint256>() {
                     }));
 
-    public FundRequestContract(final String contractBinary, final String contractAddress, final Web3j web3j, final TransactionManager transactionManager, final BigInteger gasPrice, final BigInteger gasLimit) {
-        super(contractBinary, contractAddress, web3j, transactionManager, gasPrice, gasLimit);
-    }
 
-    public FundRequestContract(final String contractBinary, final String contractAddress, final Web3j web3j, final Credentials credentials, final BigInteger gasPrice, final BigInteger gasLimit) {
-        super(contractBinary, contractAddress, web3j, credentials, gasPrice, gasLimit);
+    public FundRequestContract(final String contractAddress, final Web3j web3j, final Credentials credentials, final BigInteger gasPrice, final BigInteger gasLimit) {
+        super("", contractAddress, web3j, credentials, gasPrice, gasLimit);
     }
 
     public String getBalance(final String data, final String platformId) throws ExecutionException, InterruptedException {
