@@ -14,9 +14,9 @@ io:
         gasprice: '1000000000'
         gaslimit: '400000'
     token:
-      address: '0x9f88c5cc76148d41a5db8d0a7e581481efc9667b'
+      address: '0x02F96eF85cAd6639500CA1cc8356F0b5CA5bF1D2'
     contract:
-      address: '0x0ade7b8f58ba034a2a818f1fd48c3c92039c1cc8'
+      address: '0xC16a102813B7bD98b0BEF2dF28FFCaf1Fbee97c0'
 server:
   port: 8001
 
