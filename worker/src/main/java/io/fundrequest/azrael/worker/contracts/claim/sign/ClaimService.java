@@ -18,6 +18,7 @@ import org.web3j.protocol.core.DefaultBlockParameterName;
 import org.web3j.protocol.core.methods.response.EthGetTransactionCount;
 import org.web3j.protocol.core.methods.response.EthSendTransaction;
 
+import javax.xml.bind.DatatypeConverter;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.util.Arrays;
@@ -35,7 +36,12 @@ public class ClaimService {
     private String gasPrice;
     private String gasLimit;
 
-    public ClaimService(@Value("${io.fundrequest.execute.account}") String executingAccount, Web3j web3j, @Value("${io.fundrequest.contract.address}") String fundrequestContractAddress, ObjectMapper objectMapper, @Value("${io.fundrequest.azrael.claim.gasprice}") String gasPrice, @Value("${io.fundrequest.azrael.claim.gaslimit}") String gasLimit) {
+    public ClaimService(@Value("${io.fundrequest.execute.account}") String executingAccount,
+                        Web3j web3j,
+                        @Value("${io.fundrequest.contract.address}") String fundrequestContractAddress,
+                        ObjectMapper objectMapper,
+                        @Value("${io.fundrequest.azrael.claim.gasprice}") String gasPrice,
+                        @Value("${io.fundrequest.azrael.claim.gaslimit}") String gasLimit) {
         this.keyPair = getPrivateKey(executingAccount);
         this.web3j = web3j;
         this.fundrequestContractAddress = fundrequestContractAddress;
@@ -64,11 +70,11 @@ public class ClaimService {
                         new org.web3j.abi.datatypes.Utf8String(claimSignature.getPlatformId()),
                         new org.web3j.abi.datatypes.Utf8String(claimSignature.getSolver()),
                         new org.web3j.abi.datatypes.Address(claimSignature.getAddress()),
-                        toBytes32(claimSignature.getR()),
-                        toBytes32(claimSignature.getS()),
+                        hexStringToBytes32(claimSignature.getR()),
+                        hexStringToBytes32(claimSignature.getR()),
                         new org.web3j.abi.datatypes.generated.Uint8(claimSignature.getV())
 
-                ),
+                             ),
                 emptyList());
         final String encodedFunction = FunctionEncoder.encode(function);
         RawTransaction transaction = RawTransaction.createTransaction(
@@ -95,6 +101,14 @@ public class ClaimService {
         return new Bytes32(Arrays.copyOf(data.getBytes(), 32));
     }
 
+    private Bytes32 hexStringToBytes32(final String hex) {
+        return toBytes32(DatatypeConverter.parseHexBinary(hex.replaceFirst("0x", "")));
+    }
+
+    private Bytes32 toBytes32(final byte[] data) {
+        return new Bytes32(Arrays.copyOf(data, 32));
+    }
+
     private String prettify(final String address) {
         if (!address.startsWith("0x")) {
             return String.format("0x%s", address);
@@ -107,8 +121,8 @@ public class ClaimService {
         String address = prettify(Keys.getAddress(keyPair));
         return web3j.ethGetTransactionCount(
                 prettify(address),
-                DefaultBlockParameterName.LATEST
-        ).observable().toBlocking().first();
+                DefaultBlockParameterName.LATEST)
+                    .observable().toBlocking().first();
     }
 
     private byte[] sign(final RawTransaction etherTransaction) {
