@@ -25,3 +25,9 @@ spring:
     host: localhost
     password: default_pass
     connection-timeout: 60000
+management:
+  endpoints:
+    enabled-by-default: false
+  endpoint:
+    health:
+      show-details: always
