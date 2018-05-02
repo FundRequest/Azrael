@@ -71,7 +71,7 @@ public class ClaimService {
                         new org.web3j.abi.datatypes.Utf8String(claimSignature.getSolver()),
                         new org.web3j.abi.datatypes.Address(claimSignature.getAddress()),
                         hexStringToBytes32(claimSignature.getR()),
-                        hexStringToBytes32(claimSignature.getR()),
+                        hexStringToBytes32(claimSignature.getS()),
                         new org.web3j.abi.datatypes.generated.Uint8(claimSignature.getV())
 
                              ),
