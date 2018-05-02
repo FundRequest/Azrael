@@ -32,8 +32,7 @@ public class JmsConfig {
     SimpleMessageListenerContainer claimContainer(ConnectionFactory connectionFactory,
                                                   MessageListenerAdapter approvedClaimListenerAdapter,
                                                   @Value("${io.fundrequest.azrael.queue.approved-claim}") final String queueName) {
-        SimpleMessageListenerContainer container = new SimpleMessageListenerContainer();
-        container.setConnectionFactory(connectionFactory);
+        SimpleMessageListenerContainer container = new SimpleMessageListenerContainer(connectionFactory);
         container.setQueueNames(queueName);
         container.setDefaultRequeueRejected(false);
         container.setMessageListener(approvedClaimListenerAdapter);
