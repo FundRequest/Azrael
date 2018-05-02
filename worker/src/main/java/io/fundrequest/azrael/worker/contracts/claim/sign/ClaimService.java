@@ -70,6 +70,7 @@ public class ClaimService {
             log.info("Claim txHash: {}", send.getTransactionHash());
         } catch (IOException e) {
             log.error("Error when claiming", e);
+            throw new IllegalArgumentException("Error when trying to claim, please submit manually");
         }
 
     }
