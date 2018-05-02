@@ -9,15 +9,15 @@ dependencies {
     compile("org.springframework.boot:spring-boot-devtools")
     compile("org.springframework.boot:spring-boot-starter-amqp")
 
-    compileOnly 'org.projectlombok:lombok:1.16.18'
+    compileOnly "org.projectlombok:lombok:${lombokVersion}"
 
-    compile group: 'org.web3j', name: 'core', version: '3.2.0'
-    compile group: 'commons-codec', name: 'commons-codec', version: '1.11'
-    compile group: 'org.apache.commons', name: 'commons-lang3', version: '3.7'
+    compile group: 'org.web3j', name: 'core', version: "${web3jVersion}"
+    compile group: 'commons-codec', name: 'commons-codec', version: "${commonscodecVersion}"
+    compile group: 'org.apache.commons', name: 'commons-lang3', version: "${commonslang3Version}"
 
 
     testCompile("org.springframework.boot:spring-boot-starter-test")
-    testCompile 'org.assertj:assertj-core:3.8.0'
+    testCompile "org.assertj:assertj-core:${assertjVersion}"
 }
 
 jar {
@@ -25,13 +25,8 @@ jar {
     version = null
 }
 
-springBoot {
-    executable = true
-}
-
 bootRun {
     systemProperties System.properties
-    addResources = true
 }
 
 
