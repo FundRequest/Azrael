@@ -2,8 +2,8 @@ package io.fundrequest.azrael.worker.health;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.actuate.health.AbstractHealthIndicator;
 import org.springframework.boot.actuate.health.Health;
-import org.springframework.boot.actuate.health.HealthIndicator;
 import org.springframework.stereotype.Component;
 import org.web3j.crypto.ECKeyPair;
 import org.web3j.crypto.Keys;
@@ -14,26 +14,22 @@ import java.math.BigInteger;
 
 @Component
 @Slf4j
-public class ClaimExecutorHealthIndicator implements HealthIndicator {
+public class ClaimExecutorHealthIndicator extends AbstractHealthIndicator {
 
     private final Web3j web3j;
     private String executorAddress;
 
     public ClaimExecutorHealthIndicator(final Web3j web3j,
                                         final @Value("${io.fundrequest.execute.account}") String claimExecutorAccount) {
+        super("Problem with the balance of the executor");
         this.web3j = web3j;
         this.executorAddress = prettify(Keys.getAddress(getPrivateKey(claimExecutorAccount)));
     }
 
     @Override
-    public Health health() {
-        try {
-            hasEnoughBalance();
-            return Health.up().build();
-        } catch (final Exception ex) {
-            log.error("Problem with the balance", ex);
-            return Health.down().withDetail("error", "executor-address' balance isn't high enough.").build();
-        }
+    protected void doHealthCheck(Health.Builder builder) throws Exception {
+        hasEnoughBalance();
+        builder.up();
     }
 
     private void hasEnoughBalance() {
@@ -61,4 +57,6 @@ public class ClaimExecutorHealthIndicator implements HealthIndicator {
             return address;
         }
     }
+
+
 }

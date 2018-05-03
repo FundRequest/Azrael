@@ -31,3 +31,4 @@ management:
   endpoint:
     health:
       show-details: always
+      enabled: true
