@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.math.BigInteger;
 import java.util.Arrays;
 
+import static io.fundrequest.azrael.worker.utils.AddressUtils.prettify;
 import static java.util.Collections.emptyList;
 
 @Component
@@ -55,15 +56,42 @@ public class ClaimService {
         return ECKeyPair.create(key.toByteArray());
     }
 
-    public void receiveApprovedClaim(Object sig) throws IOException {
-        ClaimSignature claimSignature = null;
+    public void receiveApprovedClaim(final Object sig) {
+        ClaimSignature claimSignature;
         try {
             claimSignature = objectMapper.readValue((byte[]) sig, ClaimSignature.class);
         } catch (IOException e) {
             e.printStackTrace();
             return;
         }
-        Function function = new Function(
+        final Function function = toClaimFunction(claimSignature);
+        final String encodedFunction = FunctionEncoder.encode(function);
+        final RawTransaction transaction = createTransaction(encodedFunction);
+        final byte[] signedMessage = sign(transaction);
+        final String signedMessageAsHex = prettify(Hex.toHexString(signedMessage));
+
+        final EthSendTransaction send;
+        try {
+            send = web3j.ethSendRawTransaction(signedMessageAsHex).send();
+            log.info("Claim txHash: {}", send.getTransactionHash());
+        } catch (IOException e) {
+            log.error("Error when claiming", e);
+            throw new IllegalArgumentException("Error when trying to claim, please submit manually");
+        }
+
+    }
+
+    private RawTransaction createTransaction(String encodedFunction) {
+        return RawTransaction.createTransaction(
+                calculateNonce().getTransactionCount(),
+                new BigInteger(gasPrice),
+                new BigInteger(gasLimit),
+                fundrequestContractAddress,
+                encodedFunction);
+    }
+
+    private Function toClaimFunction(ClaimSignature claimSignature) {
+        return new Function(
                 "claim",
                 Arrays.asList(
                         toBytes32(claimSignature.getPlatform()),
@@ -76,25 +104,6 @@ public class ClaimService {
 
                              ),
                 emptyList());
-        final String encodedFunction = FunctionEncoder.encode(function);
-        RawTransaction transaction = RawTransaction.createTransaction(
-                calculateNonce().getTransactionCount(),
-                new BigInteger(gasPrice),
-                new BigInteger(gasLimit),
-                fundrequestContractAddress,
-                encodedFunction);
-
-
-        final byte[] signedMessage = sign(transaction);
-        final String signedMessageAsHex = prettify(Hex.toHexString(signedMessage));
-        final EthSendTransaction send;
-        try {
-            send = web3j.ethSendRawTransaction(signedMessageAsHex).send();
-            log.info("Claim txHash: {}", send.getTransactionHash());
-        } catch (IOException e) {
-            log.error("Error when claiming", e);
-        }
-
     }
 
     private Bytes32 toBytes32(final String data) {
@@ -107,14 +116,6 @@ public class ClaimService {
 
     private Bytes32 toBytes32(final byte[] data) {
         return new Bytes32(Arrays.copyOf(data, 32));
-    }
-
-    private String prettify(final String address) {
-        if (!address.startsWith("0x")) {
-            return String.format("0x%s", address);
-        } else {
-            return address;
-        }
     }
 
     private EthGetTransactionCount calculateNonce() {
