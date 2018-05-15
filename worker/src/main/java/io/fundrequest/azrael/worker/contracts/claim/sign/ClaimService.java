@@ -25,6 +25,7 @@ import java.util.Arrays;
 
 import static io.fundrequest.azrael.worker.utils.AddressUtils.prettify;
 import static java.util.Collections.emptyList;
+import static org.web3j.utils.Strings.isEmpty;
 
 @Component
 @Slf4j
@@ -56,14 +57,7 @@ public class ClaimService {
         return ECKeyPair.create(key.toByteArray());
     }
 
-    public void receiveApprovedClaim(final Object sig) {
-        ClaimSignature claimSignature;
-        try {
-            claimSignature = objectMapper.readValue((byte[]) sig, ClaimSignature.class);
-        } catch (IOException e) {
-            e.printStackTrace();
-            return;
-        }
+    public String receiveApprovedClaim(final ClaimSignature claimSignature) {
         final Function function = toClaimFunction(claimSignature);
         final String encodedFunction = FunctionEncoder.encode(function);
         final RawTransaction transaction = createTransaction(encodedFunction);
@@ -73,12 +67,16 @@ public class ClaimService {
         final EthSendTransaction send;
         try {
             send = web3j.ethSendRawTransaction(signedMessageAsHex).send();
-            log.info("Claim txHash: {}", send.getTransactionHash());
+            if (send.getError() == null && !isEmpty(send.getTransactionHash())) {
+                log.info("Claim txHash: {}", send.getTransactionHash());
+                return send.getTransactionHash();
+            } else {
+                throw new IllegalArgumentException("Unable to send transaction " + send.getError().getMessage());
+            }
         } catch (IOException e) {
             log.error("Error when claiming", e);
             throw new IllegalArgumentException("Error when trying to claim, please submit manually");
         }
-
     }
 
     private RawTransaction createTransaction(String encodedFunction) {
