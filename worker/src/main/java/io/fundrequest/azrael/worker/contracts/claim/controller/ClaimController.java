@@ -14,6 +14,10 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.validation.Valid;
 
+import java.util.Objects;
+
+import static org.springframework.util.Assert.notEmpty;
+import static org.springframework.util.StringUtils.isEmpty;
 import static org.springframework.web.bind.annotation.RequestMethod.POST;
 
 @RequestMapping(value = "/rest")
@@ -41,8 +45,12 @@ public class ClaimController {
         if (bindingResult.hasErrors()) {
             throw new RuntimeException("Invalid signature");
         } else {
+            final String transactionHash = claimService.receiveApprovedClaim(command);
+            if (isEmpty(transactionHash)) {
+                throw new IllegalArgumentException("Problem occurred when trying to send transaction");
+            }
             return ClaimTransaction.builder()
-                                   .transactionHash(claimService.receiveApprovedClaim(command))
+                                   .transactionHash(transactionHash)
                                    .build();
         }
     }
