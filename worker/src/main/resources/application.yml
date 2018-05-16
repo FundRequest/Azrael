@@ -1,6 +1,8 @@
 io:
   fundrequest:
     azrael:
+      username: username
+      password: password
       queue:
         fund: 'azrael_kovan_fund'
         claim: 'azrael_kovan_claim'
