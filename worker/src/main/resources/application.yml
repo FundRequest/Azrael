@@ -27,3 +27,9 @@ spring:
     connection-timeout: 60000
 management:
   port: 8003
+  endpoints:
+    enabled-by-default: false
+  endpoint:
+    health:
+      show-details: always
+      enabled: true
