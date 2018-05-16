@@ -10,7 +10,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.web3j.abi.EventEncoder;
@@ -20,6 +20,7 @@ import org.web3j.abi.datatypes.Address;
 import org.web3j.abi.datatypes.Event;
 import org.web3j.abi.datatypes.generated.Uint256;
 import org.web3j.protocol.Web3j;
+import org.web3j.protocol.core.DefaultBlockParameter;
 import org.web3j.protocol.core.DefaultBlockParameterName;
 import org.web3j.protocol.core.methods.request.EthFilter;
 import org.web3j.protocol.core.methods.response.EthBlock;
@@ -29,36 +30,37 @@ import rx.Subscription;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Consumer;
 
 @Component
-@ConditionalOnProperty(name = "io.fundrequest.token.address")
+@ConditionalOnBean(FundRequestToken.class)
 public class FundRequestTokenListener {
 
     private static final Logger logger = LoggerFactory.getLogger(FundRequestTokenListener.class);
 
     private static final Event TRANSFER_EVENT = new Event("Transfer",
-            Arrays.asList(
-                    new TypeReference<Address>() {
-                    },
-                    new TypeReference<Address>() {
-                    }
-            ),
-            Arrays.asList(
-                    new TypeReference<Uint256>() {
-                    })
+                                                          Arrays.asList(
+                                                                  new TypeReference<Address>() {
+                                                                  },
+                                                                  new TypeReference<Address>() {
+                                                                  }
+                                                                       ),
+                                                          Arrays.asList(
+                                                                  new TypeReference<Uint256>() {
+                                                                  })
     );
 
     private static final Event CLAIMED_TOKENS_EVENT = new Event("ClaimedTokens",
-            Arrays.asList(
-                    new TypeReference<Address>() {
-                    },
-                    new TypeReference<Address>() {
-                    }
-            ),
-            Arrays.asList(
-                    new TypeReference<Uint256>() {
-                    })
+                                                                Arrays.asList(
+                                                                        new TypeReference<Address>() {
+                                                                        },
+                                                                        new TypeReference<Address>() {
+                                                                        }
+                                                                             ),
+                                                                Arrays.asList(
+                                                                        new TypeReference<Uint256>() {
+                                                                        })
     );
 
 
@@ -83,8 +85,9 @@ public class FundRequestTokenListener {
             logger.debug("starting live subscription");
             this.liveSubscription = doLiveSubscription();
         } else {
+            final Subscription newLiveSubscription = doLiveSubscription();
             this.liveSubscription.unsubscribe();
-            this.liveSubscription = doLiveSubscription();
+            this.liveSubscription = newLiveSubscription;
         }
     }
 
@@ -93,7 +96,7 @@ public class FundRequestTokenListener {
             try {
                 logger.info("Received Live Log!");
                 tokenContract.getEventParameters(getEvent(log.getTopics()), log)
-                        .ifPresent(sendToAzrael(log));
+                             .ifPresent(sendToAzrael(log));
             } catch (Exception ex) {
                 logger.error("unable to get live event parameters", ex);
             }
@@ -141,9 +144,11 @@ public class FundRequestTokenListener {
         rabbitTemplate.convertAndSend(transferQueue, objectMapper.writeValueAsString(transferEventDto));
     }
 
-    private EthFilter contractEventsFilter() {
-        EthFilter ethFilter = new EthFilter(DefaultBlockParameterName.EARLIEST,
-                DefaultBlockParameterName.LATEST, tokenContractAddress);
+    private EthFilter contractEventsFilter(final Optional<DefaultBlockParameter> from,
+                                           final Optional<DefaultBlockParameter> to) {
+        EthFilter ethFilter = new EthFilter(
+                from.orElse(DefaultBlockParameterName.EARLIEST),
+                to.orElse(DefaultBlockParameterName.LATEST), tokenContractAddress);
         ethFilter.addOptionalTopics(EventEncoder.encode(TRANSFER_EVENT));
         return ethFilter;
     }
@@ -158,7 +163,7 @@ public class FundRequestTokenListener {
     }
 
     private Observable<Log> live() {
-        return web3j.ethLogObservable(contractEventsFilter());
+        return web3j.ethLogObservable(contractEventsFilter(Optional.of(DefaultBlockParameterName.LATEST), Optional.empty()));
     }
 
 }

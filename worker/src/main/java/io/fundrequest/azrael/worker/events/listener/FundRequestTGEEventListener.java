@@ -9,7 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.web3j.abi.EventEncoder;
@@ -20,6 +20,7 @@ import org.web3j.abi.datatypes.Bool;
 import org.web3j.abi.datatypes.Event;
 import org.web3j.abi.datatypes.generated.Uint256;
 import org.web3j.protocol.Web3j;
+import org.web3j.protocol.core.DefaultBlockParameter;
 import org.web3j.protocol.core.DefaultBlockParameterName;
 import org.web3j.protocol.core.methods.request.EthFilter;
 import org.web3j.protocol.core.methods.response.EthBlock;
@@ -28,22 +29,23 @@ import rx.Observable;
 import rx.Subscription;
 
 import java.util.Arrays;
+import java.util.Optional;
 import java.util.function.Consumer;
 
 @Component
 @Slf4j
-@ConditionalOnProperty(name = "io.fundrequest.tge.address")
+@ConditionalOnBean(FundRequestTokenGenerationContract.class)
 public class FundRequestTGEEventListener {
 
 
     private static final Event PAID_EVENT = new Event("Paid",
-            Arrays.asList(new TypeReference<Address>() {
-            }),
-            Arrays.asList(
-                    new TypeReference<Uint256>() {
-                    }, new TypeReference<Uint256>() {
-                    }, new TypeReference<Bool>() {
-                    }));
+                                                      Arrays.asList(new TypeReference<Address>() {
+                                                      }),
+                                                      Arrays.asList(
+                                                              new TypeReference<Uint256>() {
+                                                              }, new TypeReference<Uint256>() {
+                                                              }, new TypeReference<Bool>() {
+                                                              }));
 
     @Autowired
     private FundRequestTokenGenerationContract tokenGenerationContract;
@@ -76,7 +78,7 @@ public class FundRequestTGEEventListener {
         return live().subscribe((logz) -> {
             try {
                 tokenGenerationContract.getEventParameters(PAID_EVENT, logz)
-                        .ifPresent(sendToAzrael(logz));
+                                       .ifPresent(sendToAzrael(logz));
             } catch (Exception ex) {
                 log.error("unable to get live event parameters", ex);
             }
@@ -118,15 +120,15 @@ public class FundRequestTGEEventListener {
         rabbitTemplate.convertAndSend(paidQueue, objectMapper.writeValueAsString(paidEvent));
     }
 
-    private EthFilter contractEventsFilter() {
-        EthFilter ethFilter = new EthFilter(DefaultBlockParameterName.EARLIEST,
-                DefaultBlockParameterName.LATEST, tokenGenerationContractAddress);
+    private EthFilter contractEventsFilter(final Optional<DefaultBlockParameter> from,
+                                           final Optional<DefaultBlockParameter> to) {
+        EthFilter ethFilter = new EthFilter(from.orElse(DefaultBlockParameterName.EARLIEST),
+                                            to.orElse(DefaultBlockParameterName.LATEST), tokenGenerationContractAddress);
         ethFilter.addOptionalTopics(EventEncoder.encode(PAID_EVENT));
         return ethFilter;
     }
 
-
     private Observable<Log> live() {
-        return web3j.ethLogObservable(contractEventsFilter());
+        return web3j.ethLogObservable(contractEventsFilter(Optional.of(DefaultBlockParameterName.LATEST), Optional.empty()));
     }
 }
