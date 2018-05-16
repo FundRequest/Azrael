@@ -12,7 +12,7 @@ io:
           url: https://kovan.fundrequest.io
       claim:
         gasprice: '1000000000'
-        gaslimit: '400000'
+        gaslimit: '2000000'
     token:
       address: '0x02F96eF85cAd6639500CA1cc8356F0b5CA5bF1D2'
     contract:
