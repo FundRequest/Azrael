@@ -25,3 +25,5 @@ spring:
     host: localhost
     password: default_pass
     connection-timeout: 60000
+management:
+  port: 8003
