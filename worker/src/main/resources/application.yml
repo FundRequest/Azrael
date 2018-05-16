@@ -19,17 +19,15 @@ io:
       address: '0xC16a102813B7bD98b0BEF2dF28FFCaf1Fbee97c0'
 server:
   port: 8001
-
 spring:
   rabbitmq:
     host: localhost
     password: default_pass
     connection-timeout: 60000
 management:
-  port: 8003
-  endpoints:
-    enabled-by-default: false
-  endpoint:
-    health:
-      show-details: always
-      enabled: true
+  port: 9001
+endpoints:
+  health:
+    sensitive: true
+    enabled: true
+  enabled: false
