@@ -21,7 +21,6 @@ public class ClaimExecutorHealthIndicator extends AbstractHealthIndicator {
 
     public ClaimExecutorHealthIndicator(final Web3j web3j,
                                         final @Value("${io.fundrequest.execute.account}") String claimExecutorAccount) {
-        super("Problem with the balance of the executor");
         this.web3j = web3j;
         this.executorAddress = prettify(Keys.getAddress(getPrivateKey(claimExecutorAccount)));
     }

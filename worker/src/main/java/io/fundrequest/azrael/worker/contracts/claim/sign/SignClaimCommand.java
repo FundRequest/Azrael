@@ -2,8 +2,8 @@ package io.fundrequest.azrael.worker.contracts.claim.sign;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import org.hibernate.validator.constraints.NotEmpty;
 
-import javax.validation.constraints.NotEmpty;
 
 @Data
 @EqualsAndHashCode
