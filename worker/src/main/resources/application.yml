@@ -1,6 +1,8 @@
 io:
   fundrequest:
     azrael:
+      username: username
+      password: password
       queue:
         fund: 'azrael_kovan_fund'
         claim: 'azrael_kovan_claim'
@@ -13,22 +15,19 @@ io:
       claim:
         gasprice: '1000000000'
         gaslimit: '2000000'
-    token:
-      address: '0x02F96eF85cAd6639500CA1cc8356F0b5CA5bF1D2'
     contract:
       address: '0xC16a102813B7bD98b0BEF2dF28FFCaf1Fbee97c0'
 server:
   port: 8001
-
 spring:
   rabbitmq:
     host: localhost
     password: default_pass
     connection-timeout: 60000
 management:
-  endpoints:
-    enabled-by-default: false
-  endpoint:
-    health:
-      show-details: always
-      enabled: true
+  port: 9001
+endpoints:
+  health:
+    sensitive: true
+    enabled: true
+  enabled: false
