@@ -3,23 +3,24 @@ package io.fundrequest.azrael.worker.events.listener;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.fundrequest.azrael.worker.contracts.crowdsale.FundRequestTokenGenerationContract;
-import io.fundrequest.azrael.worker.contracts.crowdsale.PaidEvent;
+import io.fundrequest.azrael.worker.contracts.crowdsale.event.PaidEvent;
 import io.fundrequest.azrael.worker.events.model.PaidEventDto;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.web3j.abi.EventEncoder;
 import org.web3j.abi.EventValues;
 import org.web3j.abi.TypeReference;
 import org.web3j.abi.datatypes.Address;
+import org.web3j.abi.datatypes.Bool;
 import org.web3j.abi.datatypes.Event;
-import org.web3j.abi.datatypes.generated.Bytes32;
 import org.web3j.abi.datatypes.generated.Uint256;
 import org.web3j.protocol.Web3j;
+import org.web3j.protocol.core.DefaultBlockParameter;
 import org.web3j.protocol.core.DefaultBlockParameterName;
 import org.web3j.protocol.core.methods.request.EthFilter;
 import org.web3j.protocol.core.methods.response.EthBlock;
@@ -28,23 +29,23 @@ import rx.Observable;
 import rx.Subscription;
 
 import java.util.Arrays;
+import java.util.Optional;
 import java.util.function.Consumer;
 
 @Component
 @Slf4j
-@ConditionalOnProperty(name = "io.fundrequest.tge.address")
+@ConditionalOnBean(FundRequestTokenGenerationContract.class)
 public class FundRequestTGEEventListener {
 
 
     private static final Event PAID_EVENT = new Event("Paid",
-            Arrays.asList(new TypeReference<Address>() {
-            }),
-            Arrays.asList(
-                    new TypeReference<Bytes32>() {
-                    }, new TypeReference<Bytes32>() {
-                    },
-                    new TypeReference<Uint256>() {
-                    }));
+                                                      Arrays.asList(new TypeReference<Address>() {
+                                                      }),
+                                                      Arrays.asList(
+                                                              new TypeReference<Uint256>() {
+                                                              }, new TypeReference<Uint256>() {
+                                                              }, new TypeReference<Bool>() {
+                                                              }));
 
     @Autowired
     private FundRequestTokenGenerationContract tokenGenerationContract;
@@ -77,7 +78,7 @@ public class FundRequestTGEEventListener {
         return live().subscribe((logz) -> {
             try {
                 tokenGenerationContract.getEventParameters(PAID_EVENT, logz)
-                        .ifPresent(sendToAzrael(logz.getTransactionHash(), logz.getBlockHash()));
+                                       .ifPresent(sendToAzrael(logz));
             } catch (Exception ex) {
                 log.error("unable to get live event parameters", ex);
             }
@@ -94,38 +95,40 @@ public class FundRequestTGEEventListener {
     }
 
 
-    private Consumer<PaidEvent> sendToAzrael(final String transactionHash, final String blockHash) {
+    private Consumer<PaidEvent> sendToAzrael(Log logz) {
         return platformEvent -> {
             try {
-                EventValues eventValues = platformEvent.getEventValues();
-                long timestamp = getTimestamp(blockHash);
-                sendPaidEvent(transactionHash, eventValues, timestamp);
+                final EventValues eventValues = platformEvent.getEventValues();
+                final long timestamp = getTimestamp(logz.getBlockHash());
+                sendPaidEvent(logz.getTransactionHash(), logz.getLogIndexRaw(), eventValues, timestamp);
             } catch (final Exception ex) {
                 log.error("Unable to get event from log", ex);
             }
         };
     }
 
-    private void sendPaidEvent(String transactionHash, EventValues eventValues, long timestamp) throws JsonProcessingException {
+    private void sendPaidEvent(String transactionHash, String logIndex, EventValues eventValues, long timestamp) throws JsonProcessingException {
         final PaidEventDto paidEvent = new PaidEventDto(
                 transactionHash,
+                logIndex,
                 eventValues.getIndexedValues().get(0).toString(),
                 eventValues.getNonIndexedValues().get(0).getValue().toString(),
                 eventValues.getNonIndexedValues().get(1).getValue().toString(),
-                timestamp
+                timestamp,
+                (boolean) eventValues.getNonIndexedValues().get(2).getValue()
         );
         rabbitTemplate.convertAndSend(paidQueue, objectMapper.writeValueAsString(paidEvent));
     }
 
-    private EthFilter contractEventsFilter() {
-        EthFilter ethFilter = new EthFilter(DefaultBlockParameterName.EARLIEST,
-                DefaultBlockParameterName.LATEST, tokenGenerationContractAddress);
+    private EthFilter contractEventsFilter(final Optional<DefaultBlockParameter> from,
+                                           final Optional<DefaultBlockParameter> to) {
+        EthFilter ethFilter = new EthFilter(from.orElse(DefaultBlockParameterName.EARLIEST),
+                                            to.orElse(DefaultBlockParameterName.LATEST), tokenGenerationContractAddress);
         ethFilter.addOptionalTopics(EventEncoder.encode(PAID_EVENT));
         return ethFilter;
     }
 
-
     private Observable<Log> live() {
-        return web3j.ethLogObservable(contractEventsFilter());
+        return web3j.ethLogObservable(contractEventsFilter(Optional.of(DefaultBlockParameterName.LATEST), Optional.empty()));
     }
 }

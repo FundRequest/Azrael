@@ -1,6 +1,8 @@
 package io.fundrequest.azrael.worker.contracts.platform;
 
 
+import io.fundrequest.azrael.worker.contracts.platform.event.TokenEvent;
+import io.fundrequest.azrael.worker.contracts.platform.event.TokenEventType;
 import org.apache.commons.lang3.StringUtils;
 import org.web3j.abi.EventEncoder;
 import org.web3j.abi.EventValues;
@@ -20,8 +22,8 @@ import java.util.Optional;
 
 public class FundRequestToken extends Contract {
 
-    public FundRequestToken(final String contractBinary, final String contractAddress, final Web3j web3j, final Credentials credentials, final BigInteger gasPrice, final BigInteger gasLimit) {
-        super(contractBinary, contractAddress, web3j, credentials, gasPrice, gasLimit);
+    public FundRequestToken(final String contractAddress, final Web3j web3j, final Credentials credentials, final BigInteger gasPrice, final BigInteger gasLimit) {
+        super("", contractAddress, web3j, credentials, gasPrice, gasLimit);
     }
 
     public Optional<TokenEvent> getEventParameters(

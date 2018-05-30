@@ -4,7 +4,7 @@ package io.fundrequest.azrael.worker.events.listener;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.fundrequest.azrael.worker.contracts.platform.FundRequestContract;
-import io.fundrequest.azrael.worker.contracts.platform.PlatformEvent;
+import io.fundrequest.azrael.worker.contracts.platform.event.PlatformEvent;
 import io.fundrequest.azrael.worker.events.model.ClaimEventDto;
 import io.fundrequest.azrael.worker.events.model.FundEventDto;
 import org.slf4j.Logger;
@@ -12,17 +12,12 @@ import org.slf4j.LoggerFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.web3j.abi.EventEncoder;
 import org.web3j.abi.EventValues;
-import org.web3j.abi.TypeReference;
-import org.web3j.abi.datatypes.Address;
 import org.web3j.abi.datatypes.Event;
-import org.web3j.abi.datatypes.Utf8String;
-import org.web3j.abi.datatypes.generated.Bytes32;
-import org.web3j.abi.datatypes.generated.Uint256;
 import org.web3j.protocol.Web3j;
 import org.web3j.protocol.core.DefaultBlockParameterName;
 import org.web3j.protocol.core.methods.request.EthFilter;
@@ -33,37 +28,17 @@ import rx.Observable;
 import rx.Subscription;
 
 import javax.annotation.PostConstruct;
-import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
 
+import static io.fundrequest.azrael.worker.contracts.platform.FundRequestContract.CLAIMED_EVENT;
+import static io.fundrequest.azrael.worker.contracts.platform.FundRequestContract.FUNDED_EVENT;
+
 @Component
-@ConditionalOnProperty(name = "io.fundrequest.contract.address")
+@ConditionalOnBean(FundRequestContract.class)
 public class FundRequestPlatformEventListener {
 
     private static final Logger logger = LoggerFactory.getLogger(FundRequestPlatformEventListener.class);
-
-
-    private static final Event FUNDED_EVENT = new Event("Funded",
-            Arrays.asList(new TypeReference<Address>() {
-            }),
-            Arrays.asList(
-                    new TypeReference<Bytes32>() {
-                    }, new TypeReference<Utf8String>() {
-                    },
-                    new TypeReference<Uint256>() {
-                    }));
-
-    private static final Event CLAIMED_EVENT = new Event("Claimed",
-            Arrays.asList(new TypeReference<Address>() {
-            }),
-            Arrays.asList(
-                    new TypeReference<Bytes32>() {
-                    }, new TypeReference<Utf8String>() {
-                    }, new TypeReference<Utf8String>() {
-                    },
-                    new TypeReference<Uint256>() {
-                    }));
 
 
     @Autowired
@@ -84,27 +59,29 @@ public class FundRequestPlatformEventListener {
     private Subscription liveSubscription;
 
     @PostConstruct
-    public void listenToEvents() {
+    public void importHistoric() {
         subscribeToHistoric();
     }
 
     @Scheduled(fixedRate = (60000 * 5))
     private void subscribeToLive() {
+        final Subscription newLiveSubscription = doLiveSubscription();
+
         if (this.liveSubscription == null) {
-            logger.debug("starting live subscription");
-            this.liveSubscription = doLiveSubscription();
+            logger.debug("starting live subscription for platform events");
+            this.liveSubscription = newLiveSubscription;
         } else {
             this.liveSubscription.unsubscribe();
-            this.liveSubscription = doLiveSubscription();
+            this.liveSubscription = newLiveSubscription;
         }
     }
 
     private Subscription doLiveSubscription() {
         return live().subscribe((log) -> {
             try {
-                logger.info("Received Live Log!");
+                logger.debug("Received Live Log!");
                 fundRequestContract.getEventParameters(getEvent(log.getTopics()), log)
-                        .ifPresent(sendToAzrael(log.getTransactionHash(), log.getBlockHash()));
+                                   .ifPresent(sendToAzrael(log));
             } catch (Exception ex) {
                 logger.error("unable to get live event parameters", ex);
             }
@@ -112,23 +89,22 @@ public class FundRequestPlatformEventListener {
     }
 
     private void subscribeToHistoric() {
-        logger.debug("starting historic subscription");
+        logger.debug("starting historic subscription for platform events");
         historic().subscribe((log) -> {
             if (log.getLogs() != null && !log.getLogs().isEmpty()) {
                 log.getLogs()
-                        .forEach((logItem) -> {
-                            try {
-                                logger.info("Received historic event");
-                                final String transactionHash = ((EthLog.LogObject) logItem).getTransactionHash();
-                                final String blockhash = ((EthLog.LogObject) logItem).getBlockHash();
-                                final Event event = getEvent(((EthLog.LogObject) logItem).getTopics());
-                                fundRequestContract.getEventParameters(event, (Log) logItem.get())
-                                        .filter(this::isValidEvent)
-                                        .ifPresent(sendToAzrael(transactionHash, blockhash));
-                            } catch (Exception ex) {
-                                logger.error("unable to get event parameters", ex);
-                            }
-                        });
+                   .forEach((logItem) -> {
+                       try {
+                           logger.debug("Received historic event");
+                           final Event event = getEvent(((EthLog.LogObject) logItem).getTopics());
+                           Log logz = (Log) logItem.get();
+                           fundRequestContract.getEventParameters(event, logz)
+                                              .filter(this::isValidEvent)
+                                              .ifPresent(sendToAzrael(logz));
+                       } catch (Exception ex) {
+                           logger.error("unable to get event parameters", ex);
+                       }
+                   });
             }
         });
     }
@@ -146,20 +122,20 @@ public class FundRequestPlatformEventListener {
     private boolean isValidEvent(PlatformEvent platformEvent) {
         EventValues eventParameters = platformEvent.getEventValues();
         return eventParameters.getNonIndexedValues().size() > 0
-                && eventParameters.getIndexedValues().size() > 0;
+               && eventParameters.getIndexedValues().size() > 0;
     }
 
-    private Consumer<PlatformEvent> sendToAzrael(final String transactionHash, final String blockHash) {
+    private Consumer<PlatformEvent> sendToAzrael(Log log) {
         return platformEvent -> {
             try {
                 EventValues eventValues = platformEvent.getEventValues();
-                long timestamp = getTimestamp(blockHash);
+                long timestamp = getTimestamp(log.getBlockHash());
                 switch (platformEvent.getEventType()) {
                     case FUNDED:
-                        sendFundEvent(transactionHash, eventValues, timestamp);
+                        sendFundEvent(log.getTransactionHash(), log.getLogIndexRaw(), eventValues, timestamp);
                         break;
                     case CLAIMED:
-                        sendClaimEvent(transactionHash, eventValues, timestamp);
+                        sendClaimEvent(log.getTransactionHash(), log.getLogIndexRaw(), eventValues, timestamp);
                         break;
                     default:
                         logger.debug("Unknown event, not updating");
@@ -170,38 +146,42 @@ public class FundRequestPlatformEventListener {
         };
     }
 
-    private void sendClaimEvent(String transactionHash, EventValues eventValues, long timestamp) throws JsonProcessingException {
+    private void sendClaimEvent(String transactionHash, String logIndex, EventValues eventValues, long timestamp) throws JsonProcessingException {
         final ClaimEventDto dto = new ClaimEventDto(
                 transactionHash,
+                logIndex,
                 eventValues.getIndexedValues().get(0).toString(),
                 new String(((byte[]) eventValues.getNonIndexedValues().get(0).getValue()))
                         .chars()
                         .filter(c -> c != 0)
                         .mapToObj(c -> (char) c)
                         .collect(StringBuilder::new,
-                                StringBuilder::appendCodePoint, StringBuilder::append)
+                                 StringBuilder::appendCodePoint, StringBuilder::append)
                         .toString(),
                 eventValues.getNonIndexedValues().get(1).getValue().toString(),
                 eventValues.getNonIndexedValues().get(2).getValue().toString(),
                 eventValues.getNonIndexedValues().get(3).getValue().toString(),
+                eventValues.getNonIndexedValues().get(4).getValue().toString(),
                 timestamp
         );
         rabbitTemplate.convertAndSend(claimQueue, objectMapper.writeValueAsString(dto));
     }
 
-    private void sendFundEvent(String transactionHash, EventValues eventValues, long timestamp) throws JsonProcessingException {
+    private void sendFundEvent(String transactionHash, String logIndex, EventValues eventValues, long timestamp) throws JsonProcessingException {
         final FundEventDto fundEventDto = new FundEventDto(
                 transactionHash,
+                logIndex,
                 eventValues.getIndexedValues().get(0).toString(),
                 new String(((byte[]) eventValues.getNonIndexedValues().get(0).getValue()))
                         .chars()
                         .filter(c -> c != 0)
                         .mapToObj(c -> (char) c)
                         .collect(StringBuilder::new,
-                                StringBuilder::appendCodePoint, StringBuilder::append)
+                                 StringBuilder::appendCodePoint, StringBuilder::append)
                         .toString(),
                 eventValues.getNonIndexedValues().get(1).getValue().toString(),
                 eventValues.getNonIndexedValues().get(2).getValue().toString(),
+                eventValues.getNonIndexedValues().get(3).getValue().toString(),
                 timestamp
         );
         rabbitTemplate.convertAndSend(fundQueue, objectMapper.writeValueAsString(fundEventDto));
@@ -218,7 +198,7 @@ public class FundRequestPlatformEventListener {
 
     private EthFilter contractEventsFilter() {
         EthFilter ethFilter = new EthFilter(DefaultBlockParameterName.EARLIEST,
-                DefaultBlockParameterName.LATEST, fundrequestContractAddress);
+                                            DefaultBlockParameterName.LATEST, fundrequestContractAddress);
         ethFilter.addOptionalTopics(EventEncoder.encode(FUNDED_EVENT), EventEncoder.encode(CLAIMED_EVENT));
         return ethFilter;
     }

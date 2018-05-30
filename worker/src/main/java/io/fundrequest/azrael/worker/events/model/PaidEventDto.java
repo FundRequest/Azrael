@@ -10,9 +10,11 @@ import lombok.NoArgsConstructor;
 public class PaidEventDto {
 
     private String transactionHash;
+    private String logIndex;
     private String beneficiary;
     private String weiAmount;
     private String tokenAmount;
     private Long timestamp;
+    private boolean personalCapActive;
 
 }

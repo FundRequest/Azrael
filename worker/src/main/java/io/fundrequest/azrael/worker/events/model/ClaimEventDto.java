@@ -9,10 +9,12 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class ClaimEventDto {
     private String transactionHash;
+    private String logIndex;
     private String solverAddress;
     private String platform;
     private String platformId;
     private String solver;
+    private String token;
     private String amount;
     private long timestamp;
 

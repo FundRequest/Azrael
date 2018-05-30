@@ -1,6 +1,8 @@
 package io.fundrequest.azrael.worker.contracts.platform;
 
 import io.fundrequest.azrael.worker.contracts.claim.sign.ClaimSignature;
+import io.fundrequest.azrael.worker.contracts.platform.event.PlatformEvent;
+import io.fundrequest.azrael.worker.contracts.platform.event.PlatformEventType;
 import org.apache.commons.lang3.StringUtils;
 import org.web3j.abi.EventEncoder;
 import org.web3j.abi.EventValues;
@@ -18,7 +20,6 @@ import org.web3j.crypto.Credentials;
 import org.web3j.protocol.Web3j;
 import org.web3j.protocol.core.methods.response.Log;
 import org.web3j.tx.Contract;
-import org.web3j.tx.TransactionManager;
 
 import java.io.IOException;
 import java.math.BigInteger;
@@ -30,12 +31,33 @@ import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 
 public class FundRequestContract extends Contract {
-    public FundRequestContract(final String contractBinary, final String contractAddress, final Web3j web3j, final TransactionManager transactionManager, final BigInteger gasPrice, final BigInteger gasLimit) {
-        super(contractBinary, contractAddress, web3j, transactionManager, gasPrice, gasLimit);
-    }
 
-    public FundRequestContract(final String contractBinary, final String contractAddress, final Web3j web3j, final Credentials credentials, final BigInteger gasPrice, final BigInteger gasLimit) {
-        super(contractBinary, contractAddress, web3j, credentials, gasPrice, gasLimit);
+    public static final Event FUNDED_EVENT = new Event("Funded",
+            Arrays.asList(new TypeReference<Address>() {
+            }),
+            Arrays.asList(
+                    new TypeReference<Bytes32>() {
+                    }, new TypeReference<Utf8String>() {
+                    }, new TypeReference<Address>() {
+                    },
+                    new TypeReference<Uint256>() {
+                    }));
+
+    public static final Event CLAIMED_EVENT = new Event("Claimed",
+            Arrays.asList(new TypeReference<Address>() {
+            }),
+            Arrays.asList(
+                    new TypeReference<Bytes32>() {
+                    }, new TypeReference<Utf8String>() {
+                    }, new TypeReference<Utf8String>() {
+                    }, new TypeReference<Address>() {
+                    },
+                    new TypeReference<Uint256>() {
+                    }));
+
+
+    public FundRequestContract(final String contractAddress, final Web3j web3j, final Credentials credentials, final BigInteger gasPrice, final BigInteger gasLimit) {
+        super("", contractAddress, web3j, credentials, gasPrice, gasLimit);
     }
 
     public String getBalance(final String data, final String platformId) throws ExecutionException, InterruptedException {

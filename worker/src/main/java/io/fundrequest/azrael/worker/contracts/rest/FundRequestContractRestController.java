@@ -12,7 +12,7 @@ import static org.springframework.web.bind.annotation.RequestMethod.POST;
 @RestController
 public class FundRequestContractRestController {
 
-    @Autowired
+    @Autowired(required = false)
     private FundRequestContract fundRequestContract;
 
     @RequestMapping(value = "/balance", method = POST)
