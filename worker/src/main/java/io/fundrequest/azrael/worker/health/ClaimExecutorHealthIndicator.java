@@ -26,7 +26,7 @@ public class ClaimExecutorHealthIndicator extends AbstractHealthIndicator {
     }
 
     @Override
-    protected void doHealthCheck(Health.Builder builder) throws Exception {
+    protected void doHealthCheck(Health.Builder builder) {
         hasEnoughBalance();
         builder.up();
     }
@@ -56,6 +56,4 @@ public class ClaimExecutorHealthIndicator extends AbstractHealthIndicator {
             return address;
         }
     }
-
-
 }
