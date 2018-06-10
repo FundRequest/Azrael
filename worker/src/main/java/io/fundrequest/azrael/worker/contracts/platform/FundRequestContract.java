@@ -34,27 +34,37 @@ import java.util.concurrent.ExecutionException;
 public class FundRequestContract extends Contract {
 
     public static final Event FUNDED_EVENT = new Event("Funded",
-            Arrays.asList(new TypeReference<Address>() {
-            }),
-            Arrays.asList(
-                    new TypeReference<Bytes32>() {
-                    }, new TypeReference<Utf8String>() {
-                    }, new TypeReference<Address>() {
-                    },
-                    new TypeReference<Uint256>() {
-                    }));
+                                                       Arrays.asList(new TypeReference<Address>() {
+                                                       }),
+                                                       Arrays.asList(
+                                                               new TypeReference<Bytes32>() {
+                                                               }, new TypeReference<Utf8String>() {
+                                                               }, new TypeReference<Address>() {
+                                                               },
+                                                               new TypeReference<Uint256>() {
+                                                               }));
 
     public static final Event CLAIMED_EVENT = new Event("Claimed",
-            Arrays.asList(new TypeReference<Address>() {
-            }),
-            Arrays.asList(
-                    new TypeReference<Bytes32>() {
-                    }, new TypeReference<Utf8String>() {
-                    }, new TypeReference<Utf8String>() {
-                    }, new TypeReference<Address>() {
-                    },
-                    new TypeReference<Uint256>() {
-                    }));
+                                                        Arrays.asList(new TypeReference<Address>() {
+                                                        }),
+                                                        Arrays.asList(
+                                                                new TypeReference<Bytes32>() {
+                                                                }, new TypeReference<Utf8String>() {
+                                                                }, new TypeReference<Utf8String>() {
+                                                                }, new TypeReference<Address>() {
+                                                                },
+                                                                new TypeReference<Uint256>() {
+                                                                }));
+
+    public static final Event REFUND_EVENT = new Event("Refund",
+                                                       Arrays.asList(new TypeReference<Address>() {
+                                                       }),
+                                                       Arrays.asList(
+                                                               new TypeReference<Bytes32>() {
+                                                               }, new TypeReference<Utf8String>() {
+                                                               }, new TypeReference<Address>() {
+                                                               }, new TypeReference<Uint256>() {
+                                                               }));
 
 
     public FundRequestContract(final String contractAddress, final Web3j web3j, final Credentials credentials, final BigInteger gasPrice, final BigInteger gasLimit) {
@@ -74,24 +84,24 @@ public class FundRequestContract extends Contract {
                 toContractBytes32(claimSignature.getR()),
                 toContractBytes32(claimSignature.getS()),
                 claimSignature.getV()
-        );
+                      );
     }
 
     private boolean doClaim(byte[] platform, byte[] platformId, final String solver, final String solverAddress, byte[] r, byte[] s, int v) {
 
         //wip
         final Function claim = new Function("claim",
-                Arrays.asList(
-                        new Bytes32(platform),
-                        new Bytes32(platformId),
-                        new Bytes32(toContractBytes32(solver)),
-                        new Address(solverAddress),
-                        new Bytes32(r),
-                        new Bytes32(s),
-                        new Uint8(v)
-                ),
-                Arrays.asList(new TypeReference<Bool>() {
-                }));
+                                            Arrays.asList(
+                                                    new Bytes32(platform),
+                                                    new Bytes32(platformId),
+                                                    new Bytes32(toContractBytes32(solver)),
+                                                    new Address(solverAddress),
+                                                    new Bytes32(r),
+                                                    new Bytes32(s),
+                                                    new Uint8(v)
+                                                         ),
+                                            Arrays.asList(new TypeReference<Bool>() {
+                                            }));
         return true;
     }
 
@@ -126,9 +136,9 @@ public class FundRequestContract extends Contract {
 
     private Uint256 getBalance(byte[] data, byte[] platformId) throws ExecutionException, InterruptedException {
         final Function function = new Function("balance",
-                Arrays.asList(new Bytes32(data), new Bytes32(platformId)),
-                Collections.singletonList(new TypeReference<Uint256>() {
-                })
+                                               Arrays.asList(new Bytes32(data), new Bytes32(platformId)),
+                                               Collections.singletonList(new TypeReference<Uint256>() {
+                                               })
         );
         try {
             return executeCallSingleValueReturn(function);
