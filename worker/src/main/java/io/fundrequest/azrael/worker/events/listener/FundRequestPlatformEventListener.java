@@ -7,6 +7,7 @@ import io.fundrequest.azrael.worker.contracts.platform.FundRequestContract;
 import io.fundrequest.azrael.worker.contracts.platform.event.PlatformEvent;
 import io.fundrequest.azrael.worker.events.model.ClaimEventDto;
 import io.fundrequest.azrael.worker.events.model.FundEventDto;
+import io.fundrequest.azrael.worker.events.model.RefundEventDto;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -33,6 +34,7 @@ import java.util.function.Consumer;
 
 import static io.fundrequest.azrael.worker.contracts.platform.FundRequestContract.CLAIMED_EVENT;
 import static io.fundrequest.azrael.worker.contracts.platform.FundRequestContract.FUNDED_EVENT;
+import static io.fundrequest.azrael.worker.contracts.platform.FundRequestContract.REFUND_EVENT;
 
 @Component
 @ConditionalOnBean(FundRequestContract.class)
@@ -51,6 +53,8 @@ public class FundRequestPlatformEventListener {
     private String fundQueue;
     @Value("${io.fundrequest.azrael.queue.claim}")
     private String claimQueue;
+    @Value("${io.fundrequest.azrael.queue.refund}")
+    private String refundQueue;
     @Autowired
     private FundRequestContract fundRequestContract;
     @Autowired
@@ -113,6 +117,8 @@ public class FundRequestPlatformEventListener {
         Event event;
         if (topics.get(0).equals(EventEncoder.encode(FUNDED_EVENT))) {
             event = FUNDED_EVENT;
+        } else if (topics.get(0).equals(EventEncoder.encode(REFUND_EVENT))) {
+            event = REFUND_EVENT;
         } else {
             event = CLAIMED_EVENT;
         }
@@ -137,6 +143,8 @@ public class FundRequestPlatformEventListener {
                     case CLAIMED:
                         sendClaimEvent(log.getTransactionHash(), log.getLogIndexRaw(), eventValues, timestamp);
                         break;
+                    case REFUND:
+                        sendRefundEvent(log.getTransactionHash(), log.getLogIndexRaw(), eventValues, timestamp);
                     default:
                         logger.debug("Unknown event, not updating");
                 }
@@ -144,6 +152,25 @@ public class FundRequestPlatformEventListener {
                 logger.error("Unable to get event from log", ex);
             }
         };
+    }
+
+    private void sendRefundEvent(String transactionHash, String logIndexRaw, EventValues eventValues, long timestamp) throws JsonProcessingException {
+        final RefundEventDto dto = new RefundEventDto(transactionHash,
+                                                      logIndexRaw,
+                                                      eventValues.getIndexedValues().get(0).toString(),
+                                                      new String(((byte[]) eventValues.getNonIndexedValues().get(0).getValue()))
+                                                              .chars()
+                                                              .filter(c -> c != 0)
+                                                              .mapToObj(c -> (char) c)
+                                                              .collect(StringBuilder::new,
+                                                                       StringBuilder::appendCodePoint, StringBuilder::append)
+                                                              .toString(),
+                                                      eventValues.getNonIndexedValues().get(1).getValue().toString(),
+                                                      eventValues.getNonIndexedValues().get(2).getValue().toString(),
+                                                      eventValues.getNonIndexedValues().get(3).getValue().toString(),
+                                                      timestamp
+        );
+        rabbitTemplate.convertAndSend(refundQueue, objectMapper.writeValueAsString(dto));
     }
 
     private void sendClaimEvent(String transactionHash, String logIndex, EventValues eventValues, long timestamp) throws JsonProcessingException {

@@ -6,6 +6,7 @@ io:
       queue:
         fund: 'azrael_kovan_fund'
         claim: 'azrael_kovan_claim'
+        refund: 'azrael_kovan_refund'
         paid: 'azrael_kovan_paid'
         transfer: 'azrael_kovan_transfer'
         approved-claim: 'approved-claims'

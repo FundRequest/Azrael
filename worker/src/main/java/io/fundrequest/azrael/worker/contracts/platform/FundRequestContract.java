@@ -1,6 +1,5 @@
 package io.fundrequest.azrael.worker.contracts.platform;
 
-import io.fundrequest.azrael.worker.contracts.claim.sign.ClaimSignature;
 import io.fundrequest.azrael.worker.contracts.platform.event.PlatformEvent;
 import io.fundrequest.azrael.worker.contracts.platform.event.PlatformEventType;
 import org.apache.commons.lang3.StringUtils;
@@ -9,14 +8,12 @@ import org.web3j.abi.EventValues;
 import org.web3j.abi.FunctionReturnDecoder;
 import org.web3j.abi.TypeReference;
 import org.web3j.abi.datatypes.Address;
-import org.web3j.abi.datatypes.Bool;
 import org.web3j.abi.datatypes.Event;
 import org.web3j.abi.datatypes.Function;
 import org.web3j.abi.datatypes.Type;
 import org.web3j.abi.datatypes.Utf8String;
 import org.web3j.abi.datatypes.generated.Bytes32;
 import org.web3j.abi.datatypes.generated.Uint256;
-import org.web3j.abi.datatypes.generated.Uint8;
 import org.web3j.crypto.Credentials;
 import org.web3j.protocol.Web3j;
 import org.web3j.protocol.core.methods.response.Log;
@@ -71,38 +68,8 @@ public class FundRequestContract extends Contract {
         super("", contractAddress, web3j, credentials, gasPrice, gasLimit);
     }
 
-    public String getBalance(final String data, final String platformId) throws ExecutionException, InterruptedException {
+    public String getBalance(final String data, final String platformId) {
         return getBalance(toContractBytes32(data), toContractBytes32(platformId)).getValue().toString();
-    }
-
-    public boolean claim(final ClaimSignature claimSignature) {
-        return doClaim(
-                toContractBytes32(claimSignature.getPlatform()),
-                toContractBytes32(claimSignature.getPlatformId()),
-                claimSignature.getSolver(),
-                claimSignature.getAddress(),
-                toContractBytes32(claimSignature.getR()),
-                toContractBytes32(claimSignature.getS()),
-                claimSignature.getV()
-                      );
-    }
-
-    private boolean doClaim(byte[] platform, byte[] platformId, final String solver, final String solverAddress, byte[] r, byte[] s, int v) {
-
-        //wip
-        final Function claim = new Function("claim",
-                                            Arrays.asList(
-                                                    new Bytes32(platform),
-                                                    new Bytes32(platformId),
-                                                    new Bytes32(toContractBytes32(solver)),
-                                                    new Address(solverAddress),
-                                                    new Bytes32(r),
-                                                    new Bytes32(s),
-                                                    new Uint8(v)
-                                                         ),
-                                            Arrays.asList(new TypeReference<Bool>() {
-                                            }));
-        return true;
     }
 
     private byte[] toContractBytes32(final String data) {
@@ -134,7 +101,7 @@ public class FundRequestContract extends Contract {
         return Optional.of(new PlatformEvent(eventType.get(), new EventValues(indexedValues, nonIndexedValues)));
     }
 
-    private Uint256 getBalance(byte[] data, byte[] platformId) throws ExecutionException, InterruptedException {
+    private Uint256 getBalance(byte[] data, byte[] platformId) {
         final Function function = new Function("balance",
                                                Arrays.asList(new Bytes32(data), new Bytes32(platformId)),
                                                Collections.singletonList(new TypeReference<Uint256>() {

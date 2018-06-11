@@ -9,11 +9,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class RefundSignature {
+public class RefundRequest {
     private String platform;
     private String platformId;
     private String address;
-    private String r;
-    private String s;
-    private Integer v;
 }
