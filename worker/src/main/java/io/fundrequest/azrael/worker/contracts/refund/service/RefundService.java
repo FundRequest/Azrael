@@ -54,7 +54,7 @@ public class RefundService {
     }
 
     public String submit(final RefundRequest refundRequest) {
-        final Function function = toClaimFunction(refundRequest);
+        final Function function = toRefundFunction(refundRequest);
         final String encodedFunction = FunctionEncoder.encode(function);
         final RawTransaction transaction = createTransaction(encodedFunction);
         final byte[] signedMessage = sign(transaction);
@@ -84,7 +84,7 @@ public class RefundService {
                 encodedFunction);
     }
 
-    private Function toClaimFunction(RefundRequest refundRequest) {
+    private Function toRefundFunction(RefundRequest refundRequest) {
         return new Function(
                 "refund",
                 Arrays.asList(

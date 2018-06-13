@@ -145,6 +145,7 @@ public class FundRequestPlatformEventListener {
                         break;
                     case REFUND:
                         sendRefundEvent(log.getTransactionHash(), log.getLogIndexRaw(), eventValues, timestamp);
+                        break;
                     default:
                         logger.debug("Unknown event, not updating");
                 }
