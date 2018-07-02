@@ -227,7 +227,7 @@ public class FundRequestPlatformEventListener {
     private EthFilter contractEventsFilter() {
         EthFilter ethFilter = new EthFilter(DefaultBlockParameterName.EARLIEST,
                                             DefaultBlockParameterName.LATEST, fundrequestContractAddress);
-        ethFilter.addOptionalTopics(EventEncoder.encode(FUNDED_EVENT), EventEncoder.encode(CLAIMED_EVENT));
+        ethFilter.addOptionalTopics(EventEncoder.encode(FUNDED_EVENT), EventEncoder.encode(CLAIMED_EVENT), EventEncoder.encode(REFUND_EVENT));
         return ethFilter;
     }
 

@@ -5,6 +5,7 @@ target/
 worker/out
 
 application-*.yml
+application-*.properties
 
 ### STS ###
 .apt_generated
