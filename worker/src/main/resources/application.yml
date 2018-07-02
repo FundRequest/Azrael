@@ -32,3 +32,9 @@ endpoints:
     sensitive: true
     enabled: true
   enabled: false
+logging:
+  level:
+    io:
+      fundrequest:
+        azrael:
+          worker: debug
