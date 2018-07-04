@@ -17,7 +17,7 @@ io:
         gasprice: '1000000000'
         gaslimit: '2000000'
     contract:
-      address: '0x7392daafbd4f22f2c356eb42461cfbe2aa346ca1'
+      address: '0x59fcdfbda305f934bc6d982170c31287c4f1f434'
 server:
   port: 8001
 spring:
