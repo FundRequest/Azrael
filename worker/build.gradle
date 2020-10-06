@@ -15,6 +15,7 @@ dependencies {
     compile group: 'org.web3j', name: 'core', version: "${web3jVersion}"
     compile group: 'commons-codec', name: 'commons-codec', version: "${commonscodecVersion}"
     compile group: 'org.apache.commons', name: 'commons-lang3', version: "${commonslang3Version}"
+    compile group: 'com.github.jnr', name: 'jffi', version: '1.3.0'
 
 
     testCompile("org.springframework.boot:spring-boot-starter-test")

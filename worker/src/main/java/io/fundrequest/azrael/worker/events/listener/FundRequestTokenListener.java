@@ -41,24 +41,20 @@ public class FundRequestTokenListener {
 
     private static final Event TRANSFER_EVENT = new Event("Transfer",
                                                           Arrays.asList(
-                                                                  new TypeReference<Address>() {
+                                                                  new TypeReference<Address>(true) {
                                                                   },
-                                                                  new TypeReference<Address>() {
-                                                                  }
-                                                                       ),
-                                                          Arrays.asList(
+                                                                  new TypeReference<Address>(true) {
+                                                                  },
                                                                   new TypeReference<Uint256>() {
                                                                   })
     );
 
     private static final Event CLAIMED_TOKENS_EVENT = new Event("ClaimedTokens",
                                                                 Arrays.asList(
-                                                                        new TypeReference<Address>() {
+                                                                        new TypeReference<Address>(true) {
                                                                         },
-                                                                        new TypeReference<Address>() {
-                                                                        }
-                                                                             ),
-                                                                Arrays.asList(
+                                                                        new TypeReference<Address>(true) {
+                                                                        },
                                                                         new TypeReference<Uint256>() {
                                                                         })
     );
@@ -132,7 +128,10 @@ public class FundRequestTokenListener {
         };
     }
 
-    private void sendTransferEvent(String transactionHash, String logIndex, EventValues eventValues, long timestamp) throws JsonProcessingException {
+    private void sendTransferEvent(String transactionHash,
+                                   String logIndex,
+                                   EventValues eventValues,
+                                   long timestamp) throws JsonProcessingException {
         final TransferEventDto transferEventDto = new TransferEventDto(
                 transactionHash,
                 logIndex,

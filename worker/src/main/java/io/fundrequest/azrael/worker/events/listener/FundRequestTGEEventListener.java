@@ -39,11 +39,10 @@ public class FundRequestTGEEventListener {
 
 
     private static final Event PAID_EVENT = new Event("Paid",
-                                                      Arrays.asList(new TypeReference<Address>() {
-                                                      }),
-                                                      Arrays.asList(
-                                                              new TypeReference<Uint256>() {
-                                                              }, new TypeReference<Uint256>() {
+                                                      Arrays.asList(new TypeReference<Address>(true) {
+                                                                    },
+                                                                    new TypeReference<Uint256>() {
+                                                                    }, new TypeReference<Uint256>() {
                                                               }, new TypeReference<Bool>() {
                                                               }));
 
@@ -62,7 +61,7 @@ public class FundRequestTGEEventListener {
 
     private Subscription subscription;
 
-    @Scheduled(fixedRate = (60000 * 5))
+//    @Scheduled(fixedRate = (60000 * 5))
     private void subscribeToLive() {
         if (this.subscription == null) {
             log.debug("starting paid subscription");
@@ -107,7 +106,10 @@ public class FundRequestTGEEventListener {
         };
     }
 
-    private void sendPaidEvent(String transactionHash, String logIndex, EventValues eventValues, long timestamp) throws JsonProcessingException {
+    private void sendPaidEvent(String transactionHash,
+                               String logIndex,
+                               EventValues eventValues,
+                               long timestamp) throws JsonProcessingException {
         final PaidEventDto paidEvent = new PaidEventDto(
                 transactionHash,
                 logIndex,

@@ -31,10 +31,9 @@ import java.util.concurrent.ExecutionException;
 public class FundRequestContract extends Contract {
 
     public static final Event FUNDED_EVENT = new Event("Funded",
-                                                       Arrays.asList(new TypeReference<Address>() {
-                                                       }),
                                                        Arrays.asList(
-                                                               new TypeReference<Bytes32>() {
+                                                               new TypeReference<Address>(true) {
+                                                               }, new TypeReference<Bytes32>() {
                                                                }, new TypeReference<Utf8String>() {
                                                                }, new TypeReference<Address>() {
                                                                },
@@ -42,10 +41,9 @@ public class FundRequestContract extends Contract {
                                                                }));
 
     public static final Event CLAIMED_EVENT = new Event("Claimed",
-                                                        Arrays.asList(new TypeReference<Address>() {
-                                                        }),
                                                         Arrays.asList(
-                                                                new TypeReference<Bytes32>() {
+                                                                new TypeReference<Address>(true) {
+                                                                }, new TypeReference<Bytes32>() {
                                                                 }, new TypeReference<Utf8String>() {
                                                                 }, new TypeReference<Utf8String>() {
                                                                 }, new TypeReference<Address>() {
@@ -54,21 +52,25 @@ public class FundRequestContract extends Contract {
                                                                 }));
 
     public static final Event REFUND_EVENT = new Event("Refund",
-                                                       Arrays.asList(new TypeReference<Address>() {
-                                                       }),
                                                        Arrays.asList(
-                                                               new TypeReference<Bytes32>() {
+                                                               new TypeReference<Address>(true) {
+                                                               }, new TypeReference<Bytes32>() {
                                                                }, new TypeReference<Utf8String>() {
                                                                }, new TypeReference<Address>() {
                                                                }, new TypeReference<Uint256>() {
                                                                }));
 
 
-    public FundRequestContract(final String contractAddress, final Web3j web3j, final Credentials credentials, final BigInteger gasPrice, final BigInteger gasLimit) {
+    public FundRequestContract(final String contractAddress,
+                               final Web3j web3j,
+                               final Credentials credentials,
+                               final BigInteger gasPrice,
+                               final BigInteger gasLimit) {
         super("", contractAddress, web3j, credentials, gasPrice, gasLimit);
     }
 
-    public String getBalance(final String data, final String platformId) {
+    public String getBalance(final String data,
+                             final String platformId) {
         return getBalance(toContractBytes32(data), toContractBytes32(platformId)).getValue().toString();
     }
 
@@ -77,7 +79,8 @@ public class FundRequestContract extends Contract {
     }
 
     public Optional<PlatformEvent> getEventParameters(
-            Event event, Log log) {
+            Event event,
+            Log log) {
         final Optional<PlatformEventType> eventType = getEventType(event);
         if (!eventType.isPresent()) {
             return Optional.empty();
@@ -101,7 +104,8 @@ public class FundRequestContract extends Contract {
         return Optional.of(new PlatformEvent(eventType.get(), new EventValues(indexedValues, nonIndexedValues)));
     }
 
-    private Uint256 getBalance(byte[] data, byte[] platformId) {
+    private Uint256 getBalance(byte[] data,
+                               byte[] platformId) {
         final Function function = new Function("balance",
                                                Arrays.asList(new Bytes32(data), new Bytes32(platformId)),
                                                Collections.singletonList(new TypeReference<Uint256>() {

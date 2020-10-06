@@ -8,6 +8,7 @@ import io.fundrequest.azrael.worker.contracts.platform.event.PlatformEvent;
 import io.fundrequest.azrael.worker.events.model.ClaimEventDto;
 import io.fundrequest.azrael.worker.events.model.FundEventDto;
 import io.fundrequest.azrael.worker.events.model.RefundEventDto;
+import lombok.SneakyThrows;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -20,15 +21,18 @@ import org.web3j.abi.EventEncoder;
 import org.web3j.abi.EventValues;
 import org.web3j.abi.datatypes.Event;
 import org.web3j.protocol.Web3j;
+import org.web3j.protocol.core.DefaultBlockParameter;
 import org.web3j.protocol.core.DefaultBlockParameterName;
 import org.web3j.protocol.core.methods.request.EthFilter;
 import org.web3j.protocol.core.methods.response.EthBlock;
+import org.web3j.protocol.core.methods.response.EthBlockNumber;
 import org.web3j.protocol.core.methods.response.EthLog;
 import org.web3j.protocol.core.methods.response.Log;
 import rx.Observable;
 import rx.Subscription;
 
 import javax.annotation.PostConstruct;
+import java.math.BigInteger;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -64,7 +68,7 @@ public class FundRequestPlatformEventListener {
 
     @PostConstruct
     public void importHistoric() {
-        subscribeToHistoric();
+//        subscribeToHistoric();
     }
 
     @Scheduled(fixedRate = (60000 * 5))
@@ -83,7 +87,7 @@ public class FundRequestPlatformEventListener {
     private Subscription doLiveSubscription() {
         return live().subscribe((log) -> {
             try {
-                logger.debug("Received Live Log!");
+                logger.debug("Received Live Log!" + log.getTransactionHash());
                 fundRequestContract.getEventParameters(getEvent(log.getTopics()), log)
                                    .ifPresent(sendToAzrael(log));
             } catch (Exception ex) {
@@ -224,8 +228,9 @@ public class FundRequestPlatformEventListener {
         }
     }
 
+    @SneakyThrows
     private EthFilter contractEventsFilter() {
-        EthFilter ethFilter = new EthFilter(DefaultBlockParameterName.EARLIEST,
+        EthFilter ethFilter = new EthFilter(DefaultBlockParameterName.LATEST,
                                             DefaultBlockParameterName.LATEST, fundrequestContractAddress);
         ethFilter.addOptionalTopics(EventEncoder.encode(FUNDED_EVENT), EventEncoder.encode(CLAIMED_EVENT), EventEncoder.encode(REFUND_EVENT));
         return ethFilter;
