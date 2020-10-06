@@ -87,7 +87,7 @@ public class FundRequestPlatformEventListener {
     private Subscription doLiveSubscription() {
         return live().subscribe((log) -> {
             try {
-                logger.debug("Received Live Log!" + log.getTransactionHash());
+                logger.info("Received Live Log {}", log.getTransactionHash());
                 fundRequestContract.getEventParameters(getEvent(log.getTopics()), log)
                                    .ifPresent(sendToAzrael(log));
             } catch (Exception ex) {
