@@ -73,6 +73,7 @@ public class FundRequestPlatformEventListener {
 
     @Scheduled(fixedRate = (60000 * 5))
     private void subscribeToLive() {
+        logger.info("starting live subscription for platform events");
         final Subscription newLiveSubscription = doLiveSubscription();
 
         if (this.liveSubscription == null) {
