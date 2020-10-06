@@ -14,25 +14,21 @@ import org.slf4j.LoggerFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.web3j.abi.EventEncoder;
 import org.web3j.abi.EventValues;
 import org.web3j.abi.datatypes.Event;
 import org.web3j.protocol.Web3j;
-import org.web3j.protocol.core.DefaultBlockParameter;
 import org.web3j.protocol.core.DefaultBlockParameterName;
 import org.web3j.protocol.core.methods.request.EthFilter;
 import org.web3j.protocol.core.methods.response.EthBlock;
-import org.web3j.protocol.core.methods.response.EthBlockNumber;
 import org.web3j.protocol.core.methods.response.EthLog;
 import org.web3j.protocol.core.methods.response.Log;
 import rx.Observable;
 import rx.Subscription;
 
 import javax.annotation.PostConstruct;
-import java.math.BigInteger;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -41,7 +37,6 @@ import static io.fundrequest.azrael.worker.contracts.platform.FundRequestContrac
 import static io.fundrequest.azrael.worker.contracts.platform.FundRequestContract.REFUND_EVENT;
 
 @Component
-@ConditionalOnBean(FundRequestContract.class)
 public class FundRequestPlatformEventListener {
 
     private static final Logger logger = LoggerFactory.getLogger(FundRequestPlatformEventListener.class);
@@ -72,7 +67,7 @@ public class FundRequestPlatformEventListener {
 //        subscribeToHistoric();
     }
 
-//    @Scheduled(fixedRate = (60000 * 5))
+    @Scheduled(fixedRate = (60000 * 5))
     public void subscribeToLive() {
         logger.info("starting live subscription for platform events");
         System.out.println("starting live subscription for platform events");

@@ -3,6 +3,7 @@ package io.fundrequest.azrael.worker.config;
 import io.fundrequest.azrael.worker.contracts.crowdsale.FundRequestTokenGenerationContract;
 import io.fundrequest.azrael.worker.contracts.platform.FundRequestContract;
 import io.fundrequest.azrael.worker.contracts.platform.FundRequestToken;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
@@ -14,13 +15,14 @@ import org.web3j.protocol.Web3j;
 import java.math.BigInteger;
 
 @Configuration
+@Slf4j
 public class ContractsConfig {
 
     @Bean
-    @ConditionalOnProperty(name = "io.fundrequest.contract.address")
     public FundRequestContract providePlatformContract(
             @Value("${io.fundrequest.contract.address}") final String address,
             final Web3j web3j) {
+        log.info("Creating fundRequestContract");
         return new FundRequestContract(address, web3j, Credentials.create(ECKeyPair.create(BigInteger.ONE)), BigInteger.ONE, BigInteger.ONE);
     }
 
@@ -37,6 +39,7 @@ public class ContractsConfig {
     public FundRequestToken provideTokenContract(
             @Value("${io.fundrequest.token.address}") final String address,
             final Web3j web3j) {
+        log.info("Creating fundRequestToken");
         return new FundRequestToken(address, web3j, Credentials.create(ECKeyPair.create(BigInteger.ONE)), BigInteger.ONE, BigInteger.ONE);
     }
 }
