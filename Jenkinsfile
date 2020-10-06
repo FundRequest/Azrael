@@ -13,18 +13,6 @@ pipeline {
             steps {
                 sh './gradlew clean build'
             }
-            post {
-                always {
-                    junit '**/target/surefire-reports/*.xml'
-                    jacoco(
-                          execPattern: '**/target/*.exec',
-                          classPattern: '**/target/classes',
-                          sourcePattern: '**/src/main/java',
-                          exclusionPattern: '**/src/test*,**/*Exception*,**/*Config*'
-                    )
-
-                }
-            }
         }
         stage('Docker Build') {
           steps {
