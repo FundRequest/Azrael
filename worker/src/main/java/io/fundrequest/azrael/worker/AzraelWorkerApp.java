@@ -1,9 +1,11 @@
 package io.fundrequest.azrael.worker;
 
+import io.fundrequest.azrael.worker.events.listener.FundRequestPlatformEventListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.core.env.Environment;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
@@ -18,7 +20,8 @@ public class AzraelWorkerApp {
 
     public static void main(String[] args) throws UnknownHostException {
         SpringApplication app = new SpringApplication(AzraelWorkerApp.class);
-        Environment env = app.run(args).getEnvironment();
+        ConfigurableApplicationContext context = app.run(args);
+        Environment env = context.getEnvironment();
         log.info("\n----------------------------------------------------------\n\t"
                         + "Application '{}' is running! Access URLs:\n\t"
                         + "Local: \t\thttp://localhost:{}\n\t"
@@ -35,5 +38,7 @@ public class AzraelWorkerApp {
                 env.getProperty("io.fundrequest.token.address"),
                 env.getProperty("io.fundrequest.tge.address"),
                 env.getActiveProfiles());
+        context.getBean(FundRequestPlatformEventListener.class).subscribeToLive();
+
     }
 }
