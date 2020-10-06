@@ -1,5 +1,10 @@
-FROM openjdk:8u111-jdk-alpine
-VOLUME /tmp
+FROM openjdk:11-jre-stretch
+
+RUN apt-get update && apt-get upgrade -y && apt-get install --no-install-recommends -y
 ADD build/libs/worker.jar app.jar
-ADD libs/dd-java-agent.jar dd-java-agent.jar
-ENTRYPOINT [ "sh", "-c", "java $JAVA_OPTS -javaagent:/dd-java-agent.jar -Djava.security.egd=file:/dev/./urandom -Duser.timezone=UTC -jar /app.jar" ]
+RUN sh -c 'touch /app.jar' && \
+    mkdir config
+
+ENV JAVA_OPTS=""
+
+ENTRYPOINT exec java $JAVA_OPTS -Djava.security.egd=file:/dev/./urandom -Dhttps.protocols=TLSv1.2,TLSv1.1,TLSv1 -Duser.timezone=UTC -jar /app.jar

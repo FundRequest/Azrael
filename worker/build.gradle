@@ -10,7 +10,12 @@ dependencies {
     compile("org.springframework.boot:spring-boot-devtools")
     compile("org.springframework.boot:spring-boot-starter-amqp")
 
-    compileOnly "org.projectlombok:lombok:${lombokVersion}"
+    compileOnly 'org.projectlombok:lombok:1.18.12'
+    annotationProcessor 'org.projectlombok:lombok:1.18.12'
+
+    testCompileOnly 'org.projectlombok:lombok:1.18.12'
+    testAnnotationProcessor 'org.projectlombok:lombok:1.18.12'
+    compile group: 'jakarta.xml.bind', name: 'jakarta.xml.bind-api', version: '2.3.3'
 
     compile group: 'org.web3j', name: 'core', version: "${web3jVersion}"
     compile group: 'commons-codec', name: 'commons-codec', version: "${commonscodecVersion}"
