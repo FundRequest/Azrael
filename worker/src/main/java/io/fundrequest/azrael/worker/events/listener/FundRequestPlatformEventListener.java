@@ -68,6 +68,7 @@ public class FundRequestPlatformEventListener {
 
     @PostConstruct
     public void importHistoric() {
+        logger.info("Starting historic import");
 //        subscribeToHistoric();
     }
 
