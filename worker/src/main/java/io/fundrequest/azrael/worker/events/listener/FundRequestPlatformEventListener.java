@@ -76,7 +76,7 @@ public class FundRequestPlatformEventListener {
         final Subscription newLiveSubscription = doLiveSubscription();
 
         if (this.liveSubscription == null) {
-            logger.debug("starting live subscription for platform events");
+            logger.info("starting live subscription for platform events");
             this.liveSubscription = newLiveSubscription;
         } else {
             this.liveSubscription.unsubscribe();
@@ -230,7 +230,7 @@ public class FundRequestPlatformEventListener {
 
     @SneakyThrows
     private EthFilter contractEventsFilter() {
-        EthFilter ethFilter = new EthFilter(DefaultBlockParameterName.LATEST,
+        EthFilter ethFilter = new EthFilter(DefaultBlockParameterName.EARLIEST,
                                             DefaultBlockParameterName.LATEST, fundrequestContractAddress);
         ethFilter.addOptionalTopics(EventEncoder.encode(FUNDED_EVENT), EventEncoder.encode(CLAIMED_EVENT), EventEncoder.encode(REFUND_EVENT));
         return ethFilter;
