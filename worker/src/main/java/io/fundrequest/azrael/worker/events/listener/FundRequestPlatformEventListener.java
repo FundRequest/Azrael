@@ -75,6 +75,7 @@ public class FundRequestPlatformEventListener {
     @Scheduled(fixedRate = (60000 * 5))
     public void subscribeToLive() {
         logger.info("starting live subscription for platform events");
+        System.out.println("starting live subscription for platform events");
         final Subscription newLiveSubscription = doLiveSubscription();
 
         if (this.liveSubscription == null) {
@@ -90,6 +91,7 @@ public class FundRequestPlatformEventListener {
         return live().subscribe((log) -> {
             try {
                 logger.info("Received Live Log {}", log.getTransactionHash());
+                System.out.println("Received Live Log " + log.getTransactionHash());
                 fundRequestContract.getEventParameters(getEvent(log.getTopics()), log)
                                    .ifPresent(sendToAzrael(log));
             } catch (Exception ex) {
